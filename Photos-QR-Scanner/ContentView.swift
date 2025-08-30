@@ -1,5 +1,6 @@
 import SwiftUI
 import Photos
+import Vision
 
 struct PhotoMetadataApp: App {
     var body: some Scene {
@@ -14,6 +15,7 @@ struct PhotoInfo: Identifiable {
     let photoID: String
     let dateTimeOriginal: String
     let latLong: String
+    var qrCode: String
     let asset: PHAsset
     
     init(asset: PHAsset) {
@@ -34,6 +36,9 @@ struct PhotoInfo: Identifiable {
         } else {
             self.latLong = "No location"
         }
+        
+        // QR code will be detected asynchronously
+        self.qrCode = "Scanning..."
     }
 }
 
@@ -42,6 +47,7 @@ struct ContentView: View {
     @State private var allPhotos: [PHAsset] = []
     @State private var selectedIDs: Set<String> = []
     @State private var selectedPhotoInfos: [PhotoInfo] = []
+    @State private var qrCodeResults: [String: String] = [:]
     
     var body: some View {
         mainView
@@ -105,7 +111,11 @@ struct ContentView: View {
                     TableColumn("Photo ID") { photoInfo in
                         Text(photoInfo.photoID)
                             .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
+                            .foregroundColor(.blue)
+                            .underline()
+                            .onTapGesture {
+                                deselectPhoto(photoInfo.photoID)
+                            }
                     }
                     
                     TableColumn("Date/Time Original") { photoInfo in
@@ -116,6 +126,12 @@ struct ContentView: View {
                     TableColumn("Lat/Long") { photoInfo in
                         Text(photoInfo.latLong)
                             .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                    
+                    TableColumn("QR Code") { photoInfo in
+                        Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
+                            .font(.caption)
                             .textSelection(.enabled)
                     }
                 }
@@ -183,7 +199,69 @@ struct ContentView: View {
             selectedPhotoInfos.removeAll { $0.photoID == id }
         } else {
             selectedIDs.insert(id)
-            selectedPhotoInfos.append(PhotoInfo(asset: asset))
+            let photoInfo = PhotoInfo(asset: asset)
+            selectedPhotoInfos.append(photoInfo)
+            
+            // Start QR code detection for newly selected photo
+            detectQRCode(for: asset)
+        }
+    }
+    
+    private func deselectPhoto(_ photoID: String) {
+        selectedIDs.remove(photoID)
+        selectedPhotoInfos.removeAll { $0.photoID == photoID }
+        qrCodeResults.removeValue(forKey: photoID)
+    }
+    
+    private func detectQRCode(for asset: PHAsset) {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = false
+        
+        manager.requestImage(
+            for: asset,
+            targetSize: CGSize(width: 1024, height: 1024), // Higher resolution for QR detection
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            guard let image = image else {
+                DispatchQueue.main.async {
+                    qrCodeResults[asset.localIdentifier] = "No QR code"
+                }
+                return
+            }
+            
+            // Convert NSImage to CGImage for macOS
+            guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                DispatchQueue.main.async {
+                    qrCodeResults[asset.localIdentifier] = "No QR code"
+                }
+                return
+            }
+            
+            let request = VNDetectBarcodesRequest { request, error in
+                DispatchQueue.main.async {
+                    let result: String
+                    if let results = request.results as? [VNBarcodeObservation],
+                       let firstQR = results.first(where: { $0.symbology == .QR }),
+                       let qrString = firstQR.payloadStringValue {
+                        result = qrString
+                    } else {
+                        result = "No QR code"
+                    }
+                    
+                    qrCodeResults[asset.localIdentifier] = result
+                    
+                    // Force UI update by updating the PhotoInfo object
+                    if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == asset.localIdentifier }) {
+                        selectedPhotoInfos[index].qrCode = result
+                    }
+                }
+            }
+            
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
         }
     }
 }
