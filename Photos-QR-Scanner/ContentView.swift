@@ -13,6 +13,7 @@ struct PhotoInfo: Identifiable {
     let id = UUID()
     let photoID: String
     let dateTimeOriginal: String
+    let latLong: String
     let asset: PHAsset
     
     init(asset: PHAsset) {
@@ -24,6 +25,15 @@ struct PhotoInfo: Identifiable {
         formatter.timeStyle = .medium
         
         self.dateTimeOriginal = asset.creationDate.map { formatter.string(from: $0) } ?? "Unknown"
+        
+        // Extract GPS coordinates
+        if let location = asset.location {
+            let lat = String(format: "%.5f", location.coordinate.latitude)
+            let lng = String(format: "%.5f", location.coordinate.longitude)
+            self.latLong = "\(lat), \(lng)"
+        } else {
+            self.latLong = "No location"
+        }
     }
 }
 
@@ -101,6 +111,12 @@ struct ContentView: View {
                     TableColumn("Date/Time Original") { photoInfo in
                         Text(photoInfo.dateTimeOriginal)
                             .font(.caption)
+                    }
+                    
+                    TableColumn("Lat/Long") { photoInfo in
+                        Text(photoInfo.latLong)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
                     }
                 }
                 .padding()
