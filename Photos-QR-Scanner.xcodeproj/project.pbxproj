@@ -7,40 +7,40 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		69AC29992E636C8600DC4F4D /* PBXContainerItemProxy */ = {
+		6941D1DB2E6395390030DEA4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 69AC297F2E636C8400DC4F4D /* Project object */;
+			containerPortal = 6941D1C12E6395380030DEA4 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 69AC29862E636C8400DC4F4D;
+			remoteGlobalIDString = 6941D1C82E6395380030DEA4;
 			remoteInfo = "Photos-QR-Scanner";
 		};
-		69AC29A32E636C8600DC4F4D /* PBXContainerItemProxy */ = {
+		6941D1E52E6395390030DEA4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 69AC297F2E636C8400DC4F4D /* Project object */;
+			containerPortal = 6941D1C12E6395380030DEA4 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 69AC29862E636C8400DC4F4D;
+			remoteGlobalIDString = 6941D1C82E6395380030DEA4;
 			remoteInfo = "Photos-QR-Scanner";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Photos-QR-Scanner.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1C92E6395380030DEA4 /* Photos-QR-Scanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Photos-QR-Scanner.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1DA2E6395390030DEA4 /* Photos-QR-ScannerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1E42E6395390030DEA4 /* Photos-QR-ScannerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */ = {
+		6941D1CB2E6395380030DEA4 /* Photos-QR-Scanner */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Photos-QR-Scanner";
 			sourceTree = "<group>";
 		};
-		69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */ = {
+		6941D1DD2E6395390030DEA4 /* Photos-QR-ScannerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Photos-QR-ScannerTests";
 			sourceTree = "<group>";
 		};
-		69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */ = {
+		6941D1E72E6395390030DEA4 /* Photos-QR-ScannerUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Photos-QR-ScannerUITests";
 			sourceTree = "<group>";
@@ -48,21 +48,21 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		69AC29842E636C8400DC4F4D /* Frameworks */ = {
+		6941D1C62E6395380030DEA4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC29952E636C8600DC4F4D /* Frameworks */ = {
+		6941D1D72E6395390030DEA4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC299F2E636C8600DC4F4D /* Frameworks */ = {
+		6941D1E12E6395390030DEA4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -72,22 +72,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		69AC297E2E636C8400DC4F4D = {
+		6941D1C02E6395380030DEA4 = {
 			isa = PBXGroup;
 			children = (
-				69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */,
-				69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */,
-				69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
-				69AC29882E636C8400DC4F4D /* Products */,
+				6941D1CB2E6395380030DEA4 /* Photos-QR-Scanner */,
+				6941D1DD2E6395390030DEA4 /* Photos-QR-ScannerTests */,
+				6941D1E72E6395390030DEA4 /* Photos-QR-ScannerUITests */,
+				6941D1CA2E6395380030DEA4 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		69AC29882E636C8400DC4F4D /* Products */ = {
+		6941D1CA2E6395380030DEA4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */,
-				69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */,
-				69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */,
+				6941D1C92E6395380030DEA4 /* Photos-QR-Scanner.app */,
+				6941D1DA2E6395390030DEA4 /* Photos-QR-ScannerTests.xctest */,
+				6941D1E42E6395390030DEA4 /* Photos-QR-ScannerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,134 +95,134 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */ = {
+		6941D1C82E6395380030DEA4 /* Photos-QR-Scanner */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69AC29AC2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */;
+			buildConfigurationList = 6941D1EE2E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */;
 			buildPhases = (
-				69AC29832E636C8400DC4F4D /* Sources */,
-				69AC29842E636C8400DC4F4D /* Frameworks */,
-				69AC29852E636C8400DC4F4D /* Resources */,
+				6941D1C52E6395380030DEA4 /* Sources */,
+				6941D1C62E6395380030DEA4 /* Frameworks */,
+				6941D1C72E6395380030DEA4 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */,
+				6941D1CB2E6395380030DEA4 /* Photos-QR-Scanner */,
 			);
 			name = "Photos-QR-Scanner";
 			packageProductDependencies = (
 			);
 			productName = "Photos-QR-Scanner";
-			productReference = 69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */;
+			productReference = 6941D1C92E6395380030DEA4 /* Photos-QR-Scanner.app */;
 			productType = "com.apple.product-type.application";
 		};
-		69AC29972E636C8600DC4F4D /* Photos-QR-ScannerTests */ = {
+		6941D1D92E6395390030DEA4 /* Photos-QR-ScannerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69AC29AF2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */;
+			buildConfigurationList = 6941D1F12E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */;
 			buildPhases = (
-				69AC29942E636C8600DC4F4D /* Sources */,
-				69AC29952E636C8600DC4F4D /* Frameworks */,
-				69AC29962E636C8600DC4F4D /* Resources */,
+				6941D1D62E6395390030DEA4 /* Sources */,
+				6941D1D72E6395390030DEA4 /* Frameworks */,
+				6941D1D82E6395390030DEA4 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				69AC299A2E636C8600DC4F4D /* PBXTargetDependency */,
+				6941D1DC2E6395390030DEA4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */,
+				6941D1DD2E6395390030DEA4 /* Photos-QR-ScannerTests */,
 			);
 			name = "Photos-QR-ScannerTests";
 			packageProductDependencies = (
 			);
 			productName = "Photos-QR-ScannerTests";
-			productReference = 69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */;
+			productReference = 6941D1DA2E6395390030DEA4 /* Photos-QR-ScannerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		69AC29A12E636C8600DC4F4D /* Photos-QR-ScannerUITests */ = {
+		6941D1E32E6395390030DEA4 /* Photos-QR-ScannerUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69AC29B22E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */;
+			buildConfigurationList = 6941D1F42E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */;
 			buildPhases = (
-				69AC299E2E636C8600DC4F4D /* Sources */,
-				69AC299F2E636C8600DC4F4D /* Frameworks */,
-				69AC29A02E636C8600DC4F4D /* Resources */,
+				6941D1E02E6395390030DEA4 /* Sources */,
+				6941D1E12E6395390030DEA4 /* Frameworks */,
+				6941D1E22E6395390030DEA4 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				69AC29A42E636C8600DC4F4D /* PBXTargetDependency */,
+				6941D1E62E6395390030DEA4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
+				6941D1E72E6395390030DEA4 /* Photos-QR-ScannerUITests */,
 			);
 			name = "Photos-QR-ScannerUITests";
 			packageProductDependencies = (
 			);
 			productName = "Photos-QR-ScannerUITests";
-			productReference = 69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */;
+			productReference = 6941D1E42E6395390030DEA4 /* Photos-QR-ScannerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		69AC297F2E636C8400DC4F4D /* Project object */ = {
+		6941D1C12E6395380030DEA4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					69AC29862E636C8400DC4F4D = {
+					6941D1C82E6395380030DEA4 = {
 						CreatedOnToolsVersion = 16.2;
 					};
-					69AC29972E636C8600DC4F4D = {
+					6941D1D92E6395390030DEA4 = {
 						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 69AC29862E636C8400DC4F4D;
+						TestTargetID = 6941D1C82E6395380030DEA4;
 					};
-					69AC29A12E636C8600DC4F4D = {
+					6941D1E32E6395390030DEA4 = {
 						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 69AC29862E636C8400DC4F4D;
+						TestTargetID = 6941D1C82E6395380030DEA4;
 					};
 				};
 			};
-			buildConfigurationList = 69AC29822E636C8400DC4F4D /* Build configuration list for PBXProject "Photos-QR-Scanner" */;
+			buildConfigurationList = 6941D1C42E6395380030DEA4 /* Build configuration list for PBXProject "Photos-QR-Scanner" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 69AC297E2E636C8400DC4F4D;
+			mainGroup = 6941D1C02E6395380030DEA4;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 69AC29882E636C8400DC4F4D /* Products */;
+			productRefGroup = 6941D1CA2E6395380030DEA4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */,
-				69AC29972E636C8600DC4F4D /* Photos-QR-ScannerTests */,
-				69AC29A12E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
+				6941D1C82E6395380030DEA4 /* Photos-QR-Scanner */,
+				6941D1D92E6395390030DEA4 /* Photos-QR-ScannerTests */,
+				6941D1E32E6395390030DEA4 /* Photos-QR-ScannerUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		69AC29852E636C8400DC4F4D /* Resources */ = {
+		6941D1C72E6395380030DEA4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC29962E636C8600DC4F4D /* Resources */ = {
+		6941D1D82E6395390030DEA4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC29A02E636C8600DC4F4D /* Resources */ = {
+		6941D1E22E6395390030DEA4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -232,21 +232,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		69AC29832E636C8400DC4F4D /* Sources */ = {
+		6941D1C52E6395380030DEA4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC29942E636C8600DC4F4D /* Sources */ = {
+		6941D1D62E6395390030DEA4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		69AC299E2E636C8600DC4F4D /* Sources */ = {
+		6941D1E02E6395390030DEA4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -256,20 +256,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		69AC299A2E636C8600DC4F4D /* PBXTargetDependency */ = {
+		6941D1DC2E6395390030DEA4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */;
-			targetProxy = 69AC29992E636C8600DC4F4D /* PBXContainerItemProxy */;
+			target = 6941D1C82E6395380030DEA4 /* Photos-QR-Scanner */;
+			targetProxy = 6941D1DB2E6395390030DEA4 /* PBXContainerItemProxy */;
 		};
-		69AC29A42E636C8600DC4F4D /* PBXTargetDependency */ = {
+		6941D1E62E6395390030DEA4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */;
-			targetProxy = 69AC29A32E636C8600DC4F4D /* PBXContainerItemProxy */;
+			target = 6941D1C82E6395380030DEA4 /* Photos-QR-Scanner */;
+			targetProxy = 6941D1E52E6395390030DEA4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		69AC29AA2E636C8600DC4F4D /* Debug */ = {
+		6941D1EC2E6395390030DEA4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -332,7 +332,7 @@
 			};
 			name = Debug;
 		};
-		69AC29AB2E636C8600DC4F4D /* Release */ = {
+		6941D1ED2E6395390030DEA4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -387,7 +387,7 @@
 			};
 			name = Release;
 		};
-		69AC29AD2E636C8600DC4F4D /* Debug */ = {
+		6941D1EF2E6395390030DEA4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -400,12 +400,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(MARKETING_VERSION)";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_BUNDLE_PACKAGE_TYPE)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-Scanner";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -414,7 +413,7 @@
 			};
 			name = Debug;
 		};
-		69AC29AE2E636C8600DC4F4D /* Release */ = {
+		6941D1F02E6395390030DEA4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -427,12 +426,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(MARKETING_VERSION)";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_BUNDLE_PACKAGE_TYPE)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-Scanner";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -441,7 +439,7 @@
 			};
 			name = Release;
 		};
-		69AC29B02E636C8600DC4F4D /* Debug */ = {
+		6941D1F22E6395390030DEA4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -458,7 +456,7 @@
 			};
 			name = Debug;
 		};
-		69AC29B12E636C8600DC4F4D /* Release */ = {
+		6941D1F32E6395390030DEA4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -475,7 +473,7 @@
 			};
 			name = Release;
 		};
-		69AC29B32E636C8600DC4F4D /* Debug */ = {
+		6941D1F52E6395390030DEA4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -490,7 +488,7 @@
 			};
 			name = Debug;
 		};
-		69AC29B42E636C8600DC4F4D /* Release */ = {
+		6941D1F62E6395390030DEA4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -508,43 +506,43 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		69AC29822E636C8400DC4F4D /* Build configuration list for PBXProject "Photos-QR-Scanner" */ = {
+		6941D1C42E6395380030DEA4 /* Build configuration list for PBXProject "Photos-QR-Scanner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				69AC29AA2E636C8600DC4F4D /* Debug */,
-				69AC29AB2E636C8600DC4F4D /* Release */,
+				6941D1EC2E6395390030DEA4 /* Debug */,
+				6941D1ED2E6395390030DEA4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69AC29AC2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */ = {
+		6941D1EE2E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				69AC29AD2E636C8600DC4F4D /* Debug */,
-				69AC29AE2E636C8600DC4F4D /* Release */,
+				6941D1EF2E6395390030DEA4 /* Debug */,
+				6941D1F02E6395390030DEA4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69AC29AF2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */ = {
+		6941D1F12E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				69AC29B02E636C8600DC4F4D /* Debug */,
-				69AC29B12E636C8600DC4F4D /* Release */,
+				6941D1F22E6395390030DEA4 /* Debug */,
+				6941D1F32E6395390030DEA4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69AC29B22E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */ = {
+		6941D1F42E6395390030DEA4 /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				69AC29B32E636C8600DC4F4D /* Debug */,
-				69AC29B42E636C8600DC4F4D /* Release */,
+				6941D1F52E6395390030DEA4 /* Debug */,
+				6941D1F62E6395390030DEA4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 69AC297F2E636C8400DC4F4D /* Project object */;
+	rootObject = 6941D1C12E6395380030DEA4 /* Project object */;
 }
