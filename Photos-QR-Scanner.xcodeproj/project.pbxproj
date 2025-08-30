@@ -1,0 +1,550 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		69AC29992E636C8600DC4F4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 69AC297F2E636C8400DC4F4D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 69AC29862E636C8400DC4F4D;
+			remoteInfo = "Photos-QR-Scanner";
+		};
+		69AC29A32E636C8600DC4F4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 69AC297F2E636C8400DC4F4D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 69AC29862E636C8400DC4F4D;
+			remoteInfo = "Photos-QR-Scanner";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Photos-QR-Scanner.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Photos-QR-ScannerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Photos-QR-Scanner";
+			sourceTree = "<group>";
+		};
+		69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Photos-QR-ScannerTests";
+			sourceTree = "<group>";
+		};
+		69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Photos-QR-ScannerUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		69AC29842E636C8400DC4F4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC29952E636C8600DC4F4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC299F2E636C8600DC4F4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		69AC297E2E636C8400DC4F4D = {
+			isa = PBXGroup;
+			children = (
+				69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */,
+				69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */,
+				69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
+				69AC29882E636C8400DC4F4D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		69AC29882E636C8400DC4F4D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */,
+				69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */,
+				69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69AC29AC2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */;
+			buildPhases = (
+				69AC29832E636C8400DC4F4D /* Sources */,
+				69AC29842E636C8400DC4F4D /* Frameworks */,
+				69AC29852E636C8400DC4F4D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				69AC29892E636C8400DC4F4D /* Photos-QR-Scanner */,
+			);
+			name = "Photos-QR-Scanner";
+			packageProductDependencies = (
+			);
+			productName = "Photos-QR-Scanner";
+			productReference = 69AC29872E636C8400DC4F4D /* Photos-QR-Scanner.app */;
+			productType = "com.apple.product-type.application";
+		};
+		69AC29972E636C8600DC4F4D /* Photos-QR-ScannerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69AC29AF2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */;
+			buildPhases = (
+				69AC29942E636C8600DC4F4D /* Sources */,
+				69AC29952E636C8600DC4F4D /* Frameworks */,
+				69AC29962E636C8600DC4F4D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				69AC299A2E636C8600DC4F4D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				69AC299B2E636C8600DC4F4D /* Photos-QR-ScannerTests */,
+			);
+			name = "Photos-QR-ScannerTests";
+			packageProductDependencies = (
+			);
+			productName = "Photos-QR-ScannerTests";
+			productReference = 69AC29982E636C8600DC4F4D /* Photos-QR-ScannerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		69AC29A12E636C8600DC4F4D /* Photos-QR-ScannerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69AC29B22E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */;
+			buildPhases = (
+				69AC299E2E636C8600DC4F4D /* Sources */,
+				69AC299F2E636C8600DC4F4D /* Frameworks */,
+				69AC29A02E636C8600DC4F4D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				69AC29A42E636C8600DC4F4D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				69AC29A52E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
+			);
+			name = "Photos-QR-ScannerUITests";
+			packageProductDependencies = (
+			);
+			productName = "Photos-QR-ScannerUITests";
+			productReference = 69AC29A22E636C8600DC4F4D /* Photos-QR-ScannerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		69AC297F2E636C8400DC4F4D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					69AC29862E636C8400DC4F4D = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					69AC29972E636C8600DC4F4D = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 69AC29862E636C8400DC4F4D;
+					};
+					69AC29A12E636C8600DC4F4D = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 69AC29862E636C8400DC4F4D;
+					};
+				};
+			};
+			buildConfigurationList = 69AC29822E636C8400DC4F4D /* Build configuration list for PBXProject "Photos-QR-Scanner" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 69AC297E2E636C8400DC4F4D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 69AC29882E636C8400DC4F4D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */,
+				69AC29972E636C8600DC4F4D /* Photos-QR-ScannerTests */,
+				69AC29A12E636C8600DC4F4D /* Photos-QR-ScannerUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		69AC29852E636C8400DC4F4D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC29962E636C8600DC4F4D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC29A02E636C8600DC4F4D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		69AC29832E636C8400DC4F4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC29942E636C8600DC4F4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69AC299E2E636C8600DC4F4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		69AC299A2E636C8600DC4F4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */;
+			targetProxy = 69AC29992E636C8600DC4F4D /* PBXContainerItemProxy */;
+		};
+		69AC29A42E636C8600DC4F4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 69AC29862E636C8400DC4F4D /* Photos-QR-Scanner */;
+			targetProxy = 69AC29A32E636C8600DC4F4D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		69AC29AA2E636C8600DC4F4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		69AC29AB2E636C8600DC4F4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		69AC29AD2E636C8600DC4F4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Photos-QR-Scanner/Photos_QR_Scanner.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Photos-QR-Scanner/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(MARKETING_VERSION)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-Scanner";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		69AC29AE2E636C8600DC4F4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Photos-QR-Scanner/Photos_QR_Scanner.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Photos-QR-Scanner/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(MARKETING_VERSION)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-Scanner";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		69AC29B02E636C8600DC4F4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-ScannerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Photos-QR-Scanner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Photos-QR-Scanner";
+			};
+			name = Debug;
+		};
+		69AC29B12E636C8600DC4F4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-ScannerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Photos-QR-Scanner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Photos-QR-Scanner";
+			};
+			name = Release;
+		};
+		69AC29B32E636C8600DC4F4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-ScannerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Photos-QR-Scanner";
+			};
+			name = Debug;
+		};
+		69AC29B42E636C8600DC4F4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.Photos-QR-ScannerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Photos-QR-Scanner";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		69AC29822E636C8400DC4F4D /* Build configuration list for PBXProject "Photos-QR-Scanner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69AC29AA2E636C8600DC4F4D /* Debug */,
+				69AC29AB2E636C8600DC4F4D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		69AC29AC2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-Scanner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69AC29AD2E636C8600DC4F4D /* Debug */,
+				69AC29AE2E636C8600DC4F4D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		69AC29AF2E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69AC29B02E636C8600DC4F4D /* Debug */,
+				69AC29B12E636C8600DC4F4D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		69AC29B22E636C8600DC4F4D /* Build configuration list for PBXNativeTarget "Photos-QR-ScannerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69AC29B32E636C8600DC4F4D /* Debug */,
+				69AC29B42E636C8600DC4F4D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 69AC297F2E636C8400DC4F4D /* Project object */;
+}
