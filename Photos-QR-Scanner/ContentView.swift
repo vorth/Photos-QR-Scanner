@@ -48,6 +48,7 @@ struct ContentView: View {
     @State private var selectedIDs: Set<String> = []
     @State private var selectedPhotoInfos: [PhotoInfo] = []
     @State private var qrCodeResults: [String: String] = [:]
+    @State private var thumbnailSize: Double = 100
     
     var body: some View {
         mainView
@@ -74,21 +75,35 @@ struct ContentView: View {
     
     private var photoGridView: some View {
         VStack(alignment: .leading) {
-            Text("Recent Photos (\(allPhotos.count))")
-                .font(.headline)
-                .padding()
+            HStack {
+                Text("Recent Photos (\(allPhotos.count))")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Text("Size:")
+                    .font(.caption)
+                Slider(value: $thumbnailSize, in: 80...300, step: 20)
+                    .frame(width: 100)
+                Text("\(Int(thumbnailSize))px")
+                    .font(.caption)
+                    .frame(width: 40)
+            }
+            .padding()
             
             ScrollView {
                 LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: 100), spacing: 6)
+                    GridItem(.adaptive(minimum: thumbnailSize), spacing: 6)
                 ], spacing: 6) {
                     ForEach(allPhotos.indices, id: \.self) { index in
                         ThumbnailView(
                             asset: allPhotos[index],
-                            isSelected: selectedIDs.contains(allPhotos[index].localIdentifier)
-                        ) {
-                            toggleSelection(allPhotos[index])
-                        }
+                            isSelected: selectedIDs.contains(allPhotos[index].localIdentifier),
+                            size: thumbnailSize,
+                            onTap: {
+                                toggleSelection(allPhotos[index])
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal)
@@ -269,6 +284,7 @@ struct ContentView: View {
 struct ThumbnailView: View {
     let asset: PHAsset
     let isSelected: Bool
+    let size: Double
     let onTap: () -> Void
     
     @State private var thumbnail: NSImage?
