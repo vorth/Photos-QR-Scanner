@@ -12,6 +12,15 @@ struct PhotoMetadataApp: App {
     }
 }
 
+struct ExportPhotoInfo: Codable {
+    let photoID: String
+    let dateTimeOriginal: String
+    let latLong: String
+    let qrCode: String
+    let temperatureC: String
+    let temperatureF: String
+}
+
 struct PhotoInfo: Identifiable {
     let id = UUID()
     let photoID: String
@@ -194,6 +203,12 @@ struct ContentView: View {
                 .font(.headline)
                 .padding()
             
+            Button("Export to JSON") {
+                exportSelectedPhotosToJSON()
+            }
+            .padding(.horizontal)
+            .disabled(selectedPhotoInfos.isEmpty)
+
             if selectedPhotoInfos.isEmpty {
                 Text("Select photos to view metadata")
                     .foregroundColor(.secondary)
@@ -387,6 +402,35 @@ struct ContentView: View {
             
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? handler.perform([request])
+        }
+    }
+
+    private func exportSelectedPhotosToJSON() {
+        let exportData = selectedPhotoInfos.map { info in
+            ExportPhotoInfo(
+                photoID: info.photoID,
+                dateTimeOriginal: info.dateTimeOriginal,
+                latLong: info.latLong,
+                qrCode: qrCodeResults[info.photoID] ?? info.qrCode,
+                temperatureC: info.temperatureC,
+                temperatureF: info.temperatureF
+            )
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        do {
+            let data = try encoder.encode(exportData)
+            if var jsonString = String(data: data, encoding: .utf8) {
+                jsonString = jsonString.replacingOccurrences(of: "\\/", with: "/")
+                let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let fileURL = docsURL.appendingPathComponent("photo_scan_metadata.json")
+                try jsonString.write(to: fileURL, atomically: true, encoding: .utf8)
+                print("Exported to \(fileURL.path)")
+            } else {
+                print("Failed to encode JSON as UTF-8 string.")
+            }
+        } catch {
+            print("Export failed: \(error)")
         }
     }
 }
