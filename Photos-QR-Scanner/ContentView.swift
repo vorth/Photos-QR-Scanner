@@ -1,6 +1,8 @@
 import SwiftUI
 import Photos
 import Vision
+import CoreGraphics
+import CoreLocation
 
 struct PhotoMetadataApp: App {
     var body: some Scene {
@@ -16,6 +18,8 @@ struct PhotoInfo: Identifiable {
     let dateTimeOriginal: String
     let latLong: String
     var qrCode: String
+    var temperatureC: String
+    var temperatureF: String
     let asset: PHAsset
     
     init(asset: PHAsset) {
@@ -39,6 +43,77 @@ struct PhotoInfo: Identifiable {
         
         // QR code will be detected asynchronously
         self.qrCode = "Scanning..."
+
+        // Temperature data will be added asynchronously
+        self.temperatureC = "Searching..."
+        self.temperatureF = "Searching..."
+    }
+}
+
+struct WeatherFetcher {
+    /// Returns the temperature (°C) that was reported at the hour closest to `date`.
+    /// - Parameters:
+    ///   - coordinate: GPS of the photo.
+    ///   - date: Exact moment the photo was taken (taken from `PHAsset.creationDate`).
+    ///   - completion: Temperature in Celsius, or `nil` if anything fails.
+    static func fetchHistoricTemp(at coordinate: CLLocationCoordinate2D,
+                                  on date: Date,
+                                  completion: @escaping (Double?) -> Void) {
+        // The weather API we're using, Open‑Meteo, expects dates in YYYY‑MM‑DD format.
+        let dayFormatter = DateFormatter()
+        dayFormatter.timeZone = TimeZone(secondsFromGMT: 0)   // work in UTC for the API
+        dayFormatter.dateFormat = "yyyy-MM-dd"
+        let dayString = dayFormatter.string(from: date)
+
+        // Build the archive URL – we ask only for the hourly temperature series.
+        var comps = URLComponents(string: "https://archive-api.open-meteo.com/v1/archive")!
+        comps.queryItems = [
+            URLQueryItem(name: "latitude",  value: "\(coordinate.latitude)"),
+            URLQueryItem(name: "longitude", value: "\(coordinate.longitude)"),
+            URLQueryItem(name: "start_date", value: dayString),
+            URLQueryItem(name: "end_date",   value: dayString),
+            URLQueryItem(name: "hourly",     value: "temperature_2m"),
+            // Return times in UTC so we can compare directly.
+            URLQueryItem(name: "timezone",   value: "UTC")
+        ]
+        guard let url = comps.url else { completion(nil); return }
+
+        URLSession.shared.dataTask(with: url) { data, _, err in
+            guard err == nil,
+                  let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String:Any],
+                  let hourly = json["hourly"] as? [String:Any],
+                  let times = hourly["time"] as? [String],
+                  let temps = hourly["temperature_2m"] as? [Double],
+                  times.count == temps.count else {
+                completion(nil)
+                return
+            }
+
+            // Convert the photo’s date to UTC hour strings (e.g. "2023-04-15T14:00").
+            let hourFormatter = DateFormatter()
+            hourFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            hourFormatter.dateFormat = "yyyy-MM-dd'T'HH:00"
+
+            // Find the hour that is closest to the photo timestamp.
+            var bestIdx: Int?
+            var smallestDiff = TimeInterval.greatestFiniteMagnitude
+
+            for (idx, isoString) in times.enumerated() {
+                guard let hourDate = hourFormatter.date(from: isoString) else { continue }
+                let diff = abs(hourDate.timeIntervalSince(date))
+                if diff < smallestDiff {
+                    smallestDiff = diff
+                    bestIdx = idx
+                }
+            }
+
+            if let i = bestIdx {
+                completion(temps[i])
+            } else {
+                completion(nil)
+            }
+        }.resume()
     }
 }
 
@@ -149,6 +224,16 @@ struct ContentView: View {
                             .font(.caption)
                             .textSelection(.enabled)
                     }
+                    
+                    TableColumn("Temp (°C)") { photoInfo in
+                        Text(photoInfo.temperatureC)
+                            .font(.caption)
+                    }
+                    
+                    TableColumn("Temp (°F)") { photoInfo in
+                        Text(photoInfo.temperatureF)
+                            .font(.caption)
+                    }
                 }
                 .padding()
             }
@@ -212,6 +297,7 @@ struct ContentView: View {
         if selectedIDs.contains(id) {
             selectedIDs.remove(id)
             selectedPhotoInfos.removeAll { $0.photoID == id }
+            qrCodeResults.removeValue(forKey: id)
         } else {
             selectedIDs.insert(id)
             let photoInfo = PhotoInfo(asset: asset)
@@ -219,6 +305,28 @@ struct ContentView: View {
             
             // Start QR code detection for newly selected photo
             detectQRCode(for: asset)
+            
+            guard let location = asset.location,
+                  let creation = asset.creationDate else {
+                print("No GPS or no creation date – cannot fetch historic temperature.")
+                return
+            }
+    
+            WeatherFetcher.fetchHistoricTemp(at: location.coordinate,
+                                             on: creation) { tempC in
+                DispatchQueue.main.async(execute: {
+                    if let idx = selectedPhotoInfos.firstIndex(where: { $0.photoID == id }) {
+                         selectedPhotoInfos[idx].temperatureC = tempC != nil ?
+                            String(format: "%.1f°C", tempC!) : "—"
+                         let f = tempC != nil ? tempC! * 9.0/5.0 + 32.0 : nil
+                         selectedPhotoInfos[idx].temperatureF = f != nil ?
+                            String(format: "%.1f°F", f!) : "—"
+                        
+                        print("Historic temperature for \(id):",
+                              tempC.map { "\($0)°C" } ?? "unknown")
+                    }
+                })
+            }
         }
     }
     
