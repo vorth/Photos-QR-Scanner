@@ -15,7 +15,8 @@ struct PhotoMetadataApp: App {
 struct ExportPhotoInfo: Codable {
     let photoID: String
     let dateTimeOriginal: String
-    let latLong: String
+    let latitude: String
+    let longitude: String
     let qrCode: String
     let temperatureC: String
     let temperatureF: String
@@ -407,13 +408,19 @@ struct ContentView: View {
 
     private func exportSelectedPhotosToJSON() {
         let exportData = selectedPhotoInfos.map { info in
-            ExportPhotoInfo(
+            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
+            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
+            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
-                latLong: info.latLong,
+                latitude: latitude,
+                longitude: longitude,
                 qrCode: qrCodeResults[info.photoID] ?? info.qrCode,
-                temperatureC: info.temperatureC,
-                temperatureF: info.temperatureF
+                temperatureC: tempC,
+                temperatureF: tempF
             )
         }
         let encoder = JSONEncoder()
