@@ -404,13 +404,13 @@ struct ThumbnailView: View {
         ZStack {
             Rectangle()
                 .fill(Color.gray.opacity(0.1))
-                .frame(width: 100, height: 100)
+                .frame(width: size, height: size)
             
             if let thumbnail = thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
                     .clipped()
             } else {
                 ProgressView()
@@ -420,7 +420,7 @@ struct ThumbnailView: View {
             if isSelected {
                 Rectangle()
                     .fill(selectionColor.opacity(0.3)) // <-- use selectionColor
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
                 
                 VStack {
                     HStack {
@@ -484,7 +484,7 @@ struct ThumbnailView: View {
         
         // Account for Retina displays - request 2x or 3x the display size
         let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        let targetSize = CGSize(width: 100 * scale, height: 100 * scale)
+        let targetSize = CGSize(width: size * scale, height: size * scale)
         
         manager.requestImage(
             for: asset,
