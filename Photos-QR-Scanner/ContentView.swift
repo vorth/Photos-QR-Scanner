@@ -171,13 +171,15 @@ struct ContentView: View {
                     GridItem(.adaptive(minimum: thumbnailSize), spacing: 6)
                 ], spacing: 6) {
                     ForEach(allPhotos.indices, id: \.self) { index in
+                        let asset = allPhotos[index]
                         ThumbnailView(
-                            asset: allPhotos[index],
-                            isSelected: selectedIDs.contains(allPhotos[index].localIdentifier),
+                            asset: asset,
+                            isSelected: selectedIDs.contains(asset.localIdentifier),
                             size: thumbnailSize,
                             onTap: {
-                                toggleSelection(allPhotos[index])
-                            }
+                                toggleSelection(asset)
+                            },
+                            qrCodeResult: qrCodeResults[asset.localIdentifier] // <-- Pass QR code result
                         )
                     }
                 }
@@ -394,6 +396,7 @@ struct ThumbnailView: View {
     let isSelected: Bool
     let size: Double
     let onTap: () -> Void
+    let qrCodeResult: String?
     
     @State private var thumbnail: NSImage?
     
@@ -416,26 +419,38 @@ struct ThumbnailView: View {
             
             if isSelected {
                 Rectangle()
-                    .fill(Color.blue.opacity(0.3))
+                    .fill(selectionColor.opacity(0.3)) // <-- use selectionColor
                     .frame(width: 100, height: 100)
                 
                 VStack {
                     HStack {
                         Spacer()
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: selectionIcon) // <-- use selectionIcon
                             .foregroundColor(.white)
-                            .background(Color.blue)
+                            .background(selectionColor)
                             .clipShape(Circle())
                             .padding(4)
                     }
                     Spacer()
+                }
+                if qrCodeResult == "No QR code" {
+                    Text("No QR Code")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(6)
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(4)
+                        .padding(.bottom, 8)
+                        .padding(.horizontal, 4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 }
             }
         }
         .cornerRadius(6)
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+                .stroke(isSelected ? selectionColor : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1) // <-- use selectionColor
         )
         .onTapGesture {
             onTap()
@@ -443,6 +458,21 @@ struct ThumbnailView: View {
         .onAppear {
             loadThumbnail()
         }
+    }
+
+    // Computed properties for color and icon
+    private var selectionColor: Color {
+        if let qr = qrCodeResult, qr == "No QR code" {
+            return .red
+        }
+        return .blue
+    }
+
+    private var selectionIcon: String {
+        if let qr = qrCodeResult, qr == "No QR code" {
+            return "xmark.circle.fill"
+        }
+        return "checkmark.circle.fill"
     }
     
     private func loadThumbnail() {
