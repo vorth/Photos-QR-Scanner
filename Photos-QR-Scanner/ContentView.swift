@@ -12,6 +12,16 @@ struct PhotoMetadataApp: App {
     }
 }
 
+struct ExportPhotoInfo: Codable {
+    let photoID: String
+    let dateTimeOriginal: String
+    let latitude: String
+    let longitude: String
+    let qrCode: String
+    let temperatureC: String
+    let temperatureF: String
+}
+
 struct PhotoInfo: Identifiable {
     let id = UUID()
     let photoID: String
@@ -65,16 +75,16 @@ struct WeatherFetcher {
         dayFormatter.dateFormat = "yyyy-MM-dd"
         let dayString = dayFormatter.string(from: date)
 
-        // Build the archive URL – we ask only for the hourly temperature series.
-        var comps = URLComponents(string: "https://archive-api.open-meteo.com/v1/archive")!
+        // Build the forecast URL – we ask only for the hourly temperature series.
+        var comps = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
         comps.queryItems = [
             URLQueryItem(name: "latitude",  value: "\(coordinate.latitude)"),
             URLQueryItem(name: "longitude", value: "\(coordinate.longitude)"),
-            URLQueryItem(name: "start_date", value: dayString),
-            URLQueryItem(name: "end_date",   value: dayString),
             URLQueryItem(name: "hourly",     value: "temperature_2m"),
             // Return times in UTC so we can compare directly.
-            URLQueryItem(name: "timezone",   value: "UTC")
+            URLQueryItem(name: "timezone",   value: "UTC"),
+            URLQueryItem(name: "past_days", value: "31"),
+            URLQueryItem(name: "forecast_days", value: "1")
         ]
         guard let url = comps.url else { completion(nil); return }
 
@@ -171,13 +181,15 @@ struct ContentView: View {
                     GridItem(.adaptive(minimum: thumbnailSize), spacing: 6)
                 ], spacing: 6) {
                     ForEach(allPhotos.indices, id: \.self) { index in
+                        let asset = allPhotos[index]
                         ThumbnailView(
-                            asset: allPhotos[index],
-                            isSelected: selectedIDs.contains(allPhotos[index].localIdentifier),
+                            asset: asset,
+                            isSelected: selectedIDs.contains(asset.localIdentifier),
                             size: thumbnailSize,
                             onTap: {
-                                toggleSelection(allPhotos[index])
-                            }
+                                toggleSelection(asset)
+                            },
+                            qrCodeResult: qrCodeResults[asset.localIdentifier] // <-- Pass QR code result
                         )
                     }
                 }
@@ -192,6 +204,12 @@ struct ContentView: View {
                 .font(.headline)
                 .padding()
             
+            Button("Export to JSON") {
+                exportSelectedPhotosToJSON()
+            }
+            .padding(.horizontal)
+            .disabled(selectedPhotoInfos.isEmpty)
+
             if selectedPhotoInfos.isEmpty {
                 Text("Select photos to view metadata")
                     .foregroundColor(.secondary)
@@ -387,6 +405,41 @@ struct ContentView: View {
             try? handler.perform([request])
         }
     }
+
+    private func exportSelectedPhotosToJSON() {
+        let exportData = selectedPhotoInfos.map { info in
+            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
+            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
+            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            return ExportPhotoInfo(
+                photoID: info.photoID,
+                dateTimeOriginal: info.dateTimeOriginal,
+                latitude: latitude,
+                longitude: longitude,
+                qrCode: qrCodeResults[info.photoID] ?? info.qrCode,
+                temperatureC: tempC,
+                temperatureF: tempF
+            )
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        do {
+            let data = try encoder.encode(exportData)
+            if var jsonString = String(data: data, encoding: .utf8) {
+                jsonString = jsonString.replacingOccurrences(of: "\\/", with: "/")
+                let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let fileURL = docsURL.appendingPathComponent("photo_scan_metadata.json")
+                try jsonString.write(to: fileURL, atomically: true, encoding: .utf8)
+                print("Exported to \(fileURL.path)")
+            } else {
+                print("Failed to encode JSON as UTF-8 string.")
+            }
+        } catch {
+            print("Export failed: \(error)")
+        }
+    }
 }
 
 struct ThumbnailView: View {
@@ -394,6 +447,7 @@ struct ThumbnailView: View {
     let isSelected: Bool
     let size: Double
     let onTap: () -> Void
+    let qrCodeResult: String?
     
     @State private var thumbnail: NSImage?
     
@@ -401,13 +455,13 @@ struct ThumbnailView: View {
         ZStack {
             Rectangle()
                 .fill(Color.gray.opacity(0.1))
-                .frame(width: 100, height: 100)
+                .frame(width: size, height: size)
             
             if let thumbnail = thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
                     .clipped()
             } else {
                 ProgressView()
@@ -416,26 +470,38 @@ struct ThumbnailView: View {
             
             if isSelected {
                 Rectangle()
-                    .fill(Color.blue.opacity(0.3))
-                    .frame(width: 100, height: 100)
+                    .fill(selectionColor.opacity(0.3)) // <-- use selectionColor
+                    .frame(width: size, height: size)
                 
                 VStack {
                     HStack {
                         Spacer()
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: selectionIcon) // <-- use selectionIcon
                             .foregroundColor(.white)
-                            .background(Color.blue)
+                            .background(selectionColor)
                             .clipShape(Circle())
                             .padding(4)
                     }
                     Spacer()
+                }
+                if qrCodeResult == "No QR code" {
+                    Text("No QR Code")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(6)
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(4)
+                        .padding(.bottom, 8)
+                        .padding(.horizontal, 4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 }
             }
         }
         .cornerRadius(6)
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+                .stroke(isSelected ? selectionColor : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1) // <-- use selectionColor
         )
         .onTapGesture {
             onTap()
@@ -443,6 +509,21 @@ struct ThumbnailView: View {
         .onAppear {
             loadThumbnail()
         }
+    }
+
+    // Computed properties for color and icon
+    private var selectionColor: Color {
+        if let qr = qrCodeResult, qr == "No QR code" {
+            return .red
+        }
+        return .blue
+    }
+
+    private var selectionIcon: String {
+        if let qr = qrCodeResult, qr == "No QR code" {
+            return "xmark.circle.fill"
+        }
+        return "checkmark.circle.fill"
     }
     
     private func loadThumbnail() {
@@ -454,7 +535,7 @@ struct ThumbnailView: View {
         
         // Account for Retina displays - request 2x or 3x the display size
         let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        let targetSize = CGSize(width: 100 * scale, height: 100 * scale)
+        let targetSize = CGSize(width: size * scale, height: size * scale)
         
         manager.requestImage(
             for: asset,
