@@ -65,16 +65,16 @@ struct WeatherFetcher {
         dayFormatter.dateFormat = "yyyy-MM-dd"
         let dayString = dayFormatter.string(from: date)
 
-        // Build the archive URL – we ask only for the hourly temperature series.
-        var comps = URLComponents(string: "https://archive-api.open-meteo.com/v1/archive")!
+        // Build the forecast URL – we ask only for the hourly temperature series.
+        var comps = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
         comps.queryItems = [
             URLQueryItem(name: "latitude",  value: "\(coordinate.latitude)"),
             URLQueryItem(name: "longitude", value: "\(coordinate.longitude)"),
-            URLQueryItem(name: "start_date", value: dayString),
-            URLQueryItem(name: "end_date",   value: dayString),
             URLQueryItem(name: "hourly",     value: "temperature_2m"),
             // Return times in UTC so we can compare directly.
-            URLQueryItem(name: "timezone",   value: "UTC")
+            URLQueryItem(name: "timezone",   value: "UTC"),
+            URLQueryItem(name: "past_days", value: "31"),
+            URLQueryItem(name: "forecast_days", value: "1")
         ]
         guard let url = comps.url else { completion(nil); return }
 
