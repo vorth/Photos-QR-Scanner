@@ -429,10 +429,15 @@ struct ContentView: View {
             let data = try encoder.encode(exportData)
             if var jsonString = String(data: data, encoding: .utf8) {
                 jsonString = jsonString.replacingOccurrences(of: "\\/", with: "/")
-                let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let fileURL = docsURL.appendingPathComponent("photo_scan_metadata.json")
-                try jsonString.write(to: fileURL, atomically: true, encoding: .utf8)
-                print("Exported to \(fileURL.path)")
+
+                let panel = NSSavePanel()
+                panel.nameFieldStringValue = "photo_scan_metadata.json"
+                panel.allowedFileTypes = ["json"]
+                if panel.runModal() == .OK, let url = panel.url {
+                    try jsonString.write(to: url, atomically: true, encoding: .utf8)
+                    print("Exported to \(url.path)")
+                }
+
             } else {
                 print("Failed to encode JSON as UTF-8 string.")
             }
