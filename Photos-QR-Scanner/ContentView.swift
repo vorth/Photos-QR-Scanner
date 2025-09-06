@@ -238,6 +238,32 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Table(selectedPhotoInfos) {
+                    TableColumn("QR Code") { photoInfo in
+                        let qrResult = qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode
+                        TextField("Enter QR code", text: Binding(
+                            get: {
+                                if qrResult == "Scanning..." { return "" }
+                                if qrResult == "No QR code" { return "" }
+                                return manualQRCodes[photoInfo.photoID] ?? qrResult
+                            },
+                            set: { newValue in
+                                manualQRCodes[photoInfo.photoID] = newValue
+                                qrCodeResults[photoInfo.photoID] = newValue.isEmpty ? "" : newValue
+                            }
+                        ))
+                        .font(.caption)
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    TableColumn("Notes") { photoInfo in
+                        TextField("Notes", text: Binding(
+                            get: { photoNotes[photoInfo.photoID, default: ""] },
+                            set: { photoNotes[photoInfo.photoID] = $0 }
+                        ))
+                        .font(.caption)
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    
                     TableColumn("Photo ID") { photoInfo in
                         Text(photoInfo.photoID)
                             .font(.system(.caption, design: .monospaced))
@@ -259,23 +285,6 @@ struct ContentView: View {
                             .textSelection(.enabled)
                     }
                     
-                    TableColumn("QR Code") { photoInfo in
-                        let qrResult = qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode
-                        TextField("Enter QR code", text: Binding(
-                            get: {
-                                if qrResult == "Scanning..." { return "" }
-                                if qrResult == "No QR code" { return "" }
-                                return manualQRCodes[photoInfo.photoID] ?? qrResult
-                            },
-                            set: { newValue in
-                                manualQRCodes[photoInfo.photoID] = newValue
-                                qrCodeResults[photoInfo.photoID] = newValue.isEmpty ? "" : newValue
-                            }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
-                    }
-                    
                     TableColumn("Temp (°C)") { photoInfo in
                         Text(photoInfo.temperatureC)
                             .font(.caption)
@@ -284,15 +293,6 @@ struct ContentView: View {
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
-                    }
-                    
-                    TableColumn("Notes") { photoInfo in
-                        TextField("Notes", text: Binding(
-                            get: { photoNotes[photoInfo.photoID, default: ""] },
-                            set: { photoNotes[photoInfo.photoID] = $0 }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
                     }
                 }
                 .padding()
