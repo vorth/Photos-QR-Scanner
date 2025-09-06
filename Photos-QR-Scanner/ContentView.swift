@@ -17,10 +17,28 @@ struct ExportPhotoInfo: Codable {
     let dateTimeOriginal: String
     let latitude: String
     let longitude: String
-    let qrCode: String
+    let qrCode: String?
     let temperatureC: String
     let temperatureF: String
     let notes: String
+    
+    enum CodingKeys: String, CodingKey {
+        case photoID, dateTimeOriginal, latitude, longitude, qrCode, temperatureC, temperatureF, notes
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(photoID, forKey: .photoID)
+        try container.encode(dateTimeOriginal, forKey: .dateTimeOriginal)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encode(temperatureC, forKey: .temperatureC)
+        try container.encode(temperatureF, forKey: .temperatureF)
+        try container.encode(notes, forKey: .notes)
+        if let qrCode = qrCode, !qrCode.isEmpty {
+            try container.encode(qrCode, forKey: .qrCode)
+        }
+    }
 }
 
 struct PhotoInfo: Identifiable {
@@ -137,6 +155,7 @@ struct ContentView: View {
     @State private var qrCodeResults: [String: String] = [:]
     @State private var thumbnailSize: Double = 100
     @State private var photoNotes: [String: String] = [:]
+    @State private var manualQRCodes: [String: String] = [:]
     
     var body: some View {
         mainView
@@ -241,9 +260,20 @@ struct ContentView: View {
                     }
                     
                     TableColumn("QR Code") { photoInfo in
-                        Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
-                            .font(.caption)
-                            .textSelection(.enabled)
+                        let qrResult = qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode
+                        TextField("Enter QR code", text: Binding(
+                            get: {
+                                if qrResult == "Scanning..." { return "" }
+                                if qrResult == "No QR code" { return "" }
+                                return manualQRCodes[photoInfo.photoID] ?? qrResult
+                            },
+                            set: { newValue in
+                                manualQRCodes[photoInfo.photoID] = newValue
+                                qrCodeResults[photoInfo.photoID] = newValue.isEmpty ? "" : newValue
+                            }
+                        ))
+                        .font(.caption)
+                        .textFieldStyle(.roundedBorder)
                     }
                     
                     TableColumn("Temp (°C)") { photoInfo in
@@ -374,13 +404,13 @@ struct ContentView: View {
         
         manager.requestImage(
             for: asset,
-            targetSize: CGSize(width: 1024, height: 1024), // Higher resolution for QR detection
+            targetSize: CGSize(width: 1024, height: 1024),
             contentMode: .aspectFit,
             options: options
         ) { image, _ in
             guard let image = image else {
                 DispatchQueue.main.async {
-                    qrCodeResults[asset.localIdentifier] = "No QR code"
+                    qrCodeResults[asset.localIdentifier] = ""
                 }
                 return
             }
@@ -388,27 +418,26 @@ struct ContentView: View {
             // Convert NSImage to CGImage for macOS
             guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
                 DispatchQueue.main.async {
-                    qrCodeResults[asset.localIdentifier] = "No QR code"
+                    qrCodeResults[asset.localIdentifier] = ""
                 }
                 return
             }
             
             let request = VNDetectBarcodesRequest { request, error in
                 DispatchQueue.main.async {
-                    let result: String
                     if let results = request.results as? [VNBarcodeObservation],
                        let firstQR = results.first(where: { $0.symbology == .QR }),
                        let qrString = firstQR.payloadStringValue {
-                        result = qrString
+                        qrCodeResults[asset.localIdentifier] = qrString
+                        // Store detected QR code as initial manual value
+                        manualQRCodes[asset.localIdentifier] = qrString
                     } else {
-                        result = "No QR code"
+                        qrCodeResults[asset.localIdentifier] = ""
                     }
-                    
-                    qrCodeResults[asset.localIdentifier] = result
                     
                     // Force UI update by updating the PhotoInfo object
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == asset.localIdentifier }) {
-                        selectedPhotoInfos[index].qrCode = result
+                        selectedPhotoInfos[index].qrCode = qrCodeResults[asset.localIdentifier] ?? ""
                     }
                 }
             }
@@ -425,12 +454,13 @@ struct ContentView: View {
             let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
             let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
                 latitude: latitude,
                 longitude: longitude,
-                qrCode: qrCodeResults[info.photoID] ?? info.qrCode,
+                qrCode: qrCode.isEmpty ? nil : qrCode,
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? ""
@@ -502,7 +532,7 @@ struct ThumbnailView: View {
                     }
                     Spacer()
                 }
-                if qrCodeResult == "No QR code" {
+                if let qr = qrCodeResult, qr.isEmpty {
                     Text("No QR Code")
                         .font(.caption)
                         .fontWeight(.bold)
@@ -531,14 +561,14 @@ struct ThumbnailView: View {
 
     // Computed properties for color and icon
     private var selectionColor: Color {
-        if let qr = qrCodeResult, qr == "No QR code" {
+        if let qr = qrCodeResult, qr.isEmpty {
             return .red
         }
         return .blue
     }
 
     private var selectionIcon: String {
-        if let qr = qrCodeResult, qr == "No QR code" {
+        if let qr = qrCodeResult, qr.isEmpty {
             return "xmark.circle.fill"
         }
         return "checkmark.circle.fill"
