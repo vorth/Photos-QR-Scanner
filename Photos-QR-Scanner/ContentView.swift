@@ -20,6 +20,7 @@ struct ExportPhotoInfo: Codable {
     let qrCode: String
     let temperatureC: String
     let temperatureF: String
+    let notes: String
 }
 
 struct PhotoInfo: Identifiable {
@@ -30,6 +31,7 @@ struct PhotoInfo: Identifiable {
     var qrCode: String
     var temperatureC: String
     var temperatureF: String
+    var notes: String = ""
     let asset: PHAsset
     
     init(asset: PHAsset) {
@@ -134,6 +136,7 @@ struct ContentView: View {
     @State private var selectedPhotoInfos: [PhotoInfo] = []
     @State private var qrCodeResults: [String: String] = [:]
     @State private var thumbnailSize: Double = 100
+    @State private var photoNotes: [String: String] = [:]
     
     var body: some View {
         mainView
@@ -251,6 +254,15 @@ struct ContentView: View {
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
+                    }
+                    
+                    TableColumn("Notes") { photoInfo in
+                        TextField("Notes", text: Binding(
+                            get: { photoNotes[photoInfo.photoID, default: ""] },
+                            set: { photoNotes[photoInfo.photoID] = $0 }
+                        ))
+                        .font(.caption)
+                        .textFieldStyle(.roundedBorder)
                     }
                 }
                 .padding()
@@ -420,7 +432,8 @@ struct ContentView: View {
                 longitude: longitude,
                 qrCode: qrCodeResults[info.photoID] ?? info.qrCode,
                 temperatureC: tempC,
-                temperatureF: tempF
+                temperatureF: tempF,
+                notes: photoNotes[info.photoID] ?? ""
             )
         }
         let encoder = JSONEncoder()
