@@ -4,187 +4,6 @@ import Vision
 import CoreGraphics
 import CoreLocation
 
-struct PhotoMetadataApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-
-struct ExportPhotoInfo: Codable {
-    let photoID: String
-    let dateTimeOriginal: String
-    let latitude: String
-    let longitude: String
-    let qrCode: String?
-    let temperatureC: String
-    let temperatureF: String
-    let notes: String
-    let country: String
-    let state: String
-    let county: String
-    
-    enum CodingKeys: String, CodingKey {
-        case photoID, dateTimeOriginal, latitude, longitude, qrCode, temperatureC, temperatureF, notes, country, state, county
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(photoID, forKey: .photoID)
-        try container.encode(dateTimeOriginal, forKey: .dateTimeOriginal)
-        try container.encode(latitude, forKey: .latitude)
-        try container.encode(longitude, forKey: .longitude)
-        try container.encode(temperatureC, forKey: .temperatureC)
-        try container.encode(temperatureF, forKey: .temperatureF)
-        try container.encode(notes, forKey: .notes)
-        try container.encode(country, forKey: .country)
-        try container.encode(state, forKey: .state)
-        try container.encode(county, forKey: .county)
-        if let qrCode = qrCode, !qrCode.isEmpty {
-            try container.encode(qrCode, forKey: .qrCode)
-        }
-    }
-}
-
-struct PhotoInfo: Identifiable {
-    let id = UUID()
-    let photoID: String
-    let dateTimeOriginal: String
-    let latLong: String
-    var qrCode: String
-    var temperatureC: String
-    var temperatureF: String
-    var notes: String = ""
-    var country: String = "Searching..."
-    var state: String = "Searching..."
-    var county: String = "Searching..."
-    let asset: PHAsset
-    
-    init(asset: PHAsset) {
-        self.asset = asset
-        self.photoID = asset.localIdentifier
-        
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .medium
-        
-        self.dateTimeOriginal = asset.creationDate.map { formatter.string(from: $0) } ?? "Unknown"
-        
-        // Extract GPS coordinates
-        if let location = asset.location {
-            let lat = String(format: "%.5f", location.coordinate.latitude)
-            let lng = String(format: "%.5f", location.coordinate.longitude)
-            self.latLong = "\(lat), \(lng)"
-        } else {
-            self.latLong = "No location"
-        }
-        
-        // QR code will be detected asynchronously
-        self.qrCode = "Scanning..."
-
-        // Temperature data will be added asynchronously
-        self.temperatureC = "Searching..."
-        self.temperatureF = "Searching..."
-    }
-}
-
-struct LocationFetcher {
-    static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, String, String) -> Void) {
-        let urlString = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
-        guard let url = URL(string: urlString) else { return }
-        
-        var request = URLRequest(url: url)
-        request.addValue("Photos-QR-Scanner", forHTTPHeaderField: "User-Agent")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let address = json["address"] as? [String: Any] else {
-                DispatchQueue.main.async {
-                    completion("Unknown", "Unknown", "Unknown")
-                }
-                return
-            }
-            
-            let country = address["country"] as? String ?? "Unknown"
-            let state = address["state"] as? String ?? "Unknown"
-            let county = address["county"] as? String ?? "Unknown"
-            
-            DispatchQueue.main.async {
-                completion(country, state, county)
-            }
-        }.resume()
-    }
-}
-
-struct WeatherFetcher {
-    /// Returns the temperature (°C) that was reported at the hour closest to `date`.
-    /// - Parameters:
-    ///   - coordinate: GPS of the photo.
-    ///   - date: Exact moment the photo was taken (taken from `PHAsset.creationDate`).
-    ///   - completion: Temperature in Celsius, or `nil` if anything fails.
-    static func fetchHistoricTemp(at coordinate: CLLocationCoordinate2D,
-                                  on date: Date,
-                                  completion: @escaping (Double?) -> Void) {
-        // The weather API we're using, Open‑Meteo, expects dates in YYYY‑MM‑DD format.
-        let dayFormatter = DateFormatter()
-        dayFormatter.timeZone = TimeZone(secondsFromGMT: 0)   // work in UTC for the API
-        dayFormatter.dateFormat = "yyyy-MM-dd"
-        let dayString = dayFormatter.string(from: date)
-
-        // Build the forecast URL – we ask only for the hourly temperature series.
-        var comps = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
-        comps.queryItems = [
-            URLQueryItem(name: "latitude",  value: "\(coordinate.latitude)"),
-            URLQueryItem(name: "longitude", value: "\(coordinate.longitude)"),
-            URLQueryItem(name: "hourly",     value: "temperature_2m"),
-            // Return times in UTC so we can compare directly.
-            URLQueryItem(name: "timezone",   value: "UTC"),
-            URLQueryItem(name: "past_days", value: "31"),
-            URLQueryItem(name: "forecast_days", value: "1")
-        ]
-        guard let url = comps.url else { completion(nil); return }
-
-        URLSession.shared.dataTask(with: url) { data, _, err in
-            guard err == nil,
-                  let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String:Any],
-                  let hourly = json["hourly"] as? [String:Any],
-                  let times = hourly["time"] as? [String],
-                  let temps = hourly["temperature_2m"] as? [Double],
-                  times.count == temps.count else {
-                completion(nil)
-                return
-            }
-
-            // Convert the photo’s date to UTC hour strings (e.g. "2023-04-15T14:00").
-            let hourFormatter = DateFormatter()
-            hourFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-            hourFormatter.dateFormat = "yyyy-MM-dd'T'HH:00"
-
-            // Find the hour that is closest to the photo timestamp.
-            var bestIdx: Int?
-            var smallestDiff = TimeInterval.greatestFiniteMagnitude
-
-            for (idx, isoString) in times.enumerated() {
-                guard let hourDate = hourFormatter.date(from: isoString) else { continue }
-                let diff = abs(hourDate.timeIntervalSince(date))
-                if diff < smallestDiff {
-                    smallestDiff = diff
-                    bestIdx = idx
-                }
-            }
-
-            if let i = bestIdx {
-                completion(temps[i])
-            } else {
-                completion(nil)
-            }
-        }.resume()
-    }
-}
-
 struct ContentView: View {
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
@@ -194,12 +13,30 @@ struct ContentView: View {
     @State private var thumbnailSize: Double = 100
     @State private var photoNotes: [String: String] = [:]
     @State private var manualQRCodes: [String: String] = [:]
+    @State private var editingPhoto: PhotoInfo? = nil
     
     var body: some View {
         mainView
             .navigationTitle("Photos Metadata")
             .onAppear {
                 checkPermissions()
+            }
+            .sheet(item: $editingPhoto) { photoInfo in
+                EditPhotoView(
+                    photoInfo: photoInfo,
+                    qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
+                    notes: photoNotes[photoInfo.photoID, default: ""]
+                ) { editedInfo in
+                    // Update the corresponding PhotoInfo in selectedPhotoInfos
+                    if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
+                        selectedPhotoInfos[index].qrCode = editedInfo.qrCode
+                        selectedPhotoInfos[index].notes = editedInfo.notes
+                    }
+                    
+                    // Update QR code result and notes immediately
+                    qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
+                    photoNotes[photoInfo.photoID] = editedInfo.notes
+                }
             }
     }
     
@@ -276,30 +113,25 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Table(selectedPhotoInfos) {
+                    TableColumn("") { photoInfo in
+                        Button {
+                            editingPhoto = photoInfo
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .width(40)
+                    
                     TableColumn("QR Code") { photoInfo in
-                        let qrResult = qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode
-                        TextField("Enter QR code", text: Binding(
-                            get: {
-                                if qrResult == "Scanning..." { return "" }
-                                if qrResult == "No QR code" { return "" }
-                                return manualQRCodes[photoInfo.photoID] ?? qrResult
-                            },
-                            set: { newValue in
-                                manualQRCodes[photoInfo.photoID] = newValue
-                                qrCodeResults[photoInfo.photoID] = newValue.isEmpty ? "" : newValue
-                            }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
+                        Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
+                            .font(.caption)
                     }
                     
                     TableColumn("Notes") { photoInfo in
-                        TextField("Notes", text: Binding(
-                            get: { photoNotes[photoInfo.photoID, default: ""] },
-                            set: { photoNotes[photoInfo.photoID] = $0 }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
+                        Text(photoNotes[photoInfo.photoID, default: ""])
+                            .font(.caption)
                     }
                     
                     TableColumn("Date/Time Original") { photoInfo in
@@ -336,16 +168,6 @@ struct ContentView: View {
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
-                    }
-
-                    TableColumn("Photo ID") { photoInfo in
-                        Text(photoInfo.photoID)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.blue)
-                            .underline()
-                            .onTapGesture {
-                                deselectPhoto(photoInfo.photoID)
-                            }
                     }
                 }
                 .padding()
@@ -551,114 +373,6 @@ struct ContentView: View {
             }
         } catch {
             print("Export failed: \(error)")
-        }
-    }
-}
-
-struct ThumbnailView: View {
-    let asset: PHAsset
-    let isSelected: Bool
-    let size: Double
-    let onTap: () -> Void
-    let qrCodeResult: String?
-    
-    @State private var thumbnail: NSImage?
-    
-    var body: some View {
-        ZStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.1))
-                .frame(width: size, height: size)
-            
-            if let thumbnail = thumbnail {
-                Image(nsImage: thumbnail)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: size, height: size)
-                    .clipped()
-            } else {
-                ProgressView()
-                    .controlSize(.small)
-            }
-            
-            if isSelected {
-                Rectangle()
-                    .fill(selectionColor.opacity(0.3)) // <-- use selectionColor
-                    .frame(width: size, height: size)
-                
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: selectionIcon) // <-- use selectionIcon
-                            .foregroundColor(.white)
-                            .background(selectionColor)
-                            .clipShape(Circle())
-                            .padding(4)
-                    }
-                    Spacer()
-                }
-                if let qr = qrCodeResult, qr.isEmpty {
-                    Text("No QR Code")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(6)
-                        .background(Color.red.opacity(0.8))
-                        .cornerRadius(4)
-                        .padding(.bottom, 8)
-                        .padding(.horizontal, 4)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                }
-            }
-        }
-        .cornerRadius(6)
-        .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(isSelected ? selectionColor : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1) // <-- use selectionColor
-        )
-        .onTapGesture {
-            onTap()
-        }
-        .onAppear {
-            loadThumbnail()
-        }
-    }
-
-    // Computed properties for color and icon
-    private var selectionColor: Color {
-        if let qr = qrCodeResult, qr.isEmpty {
-            return .red
-        }
-        return .blue
-    }
-
-    private var selectionIcon: String {
-        if let qr = qrCodeResult, qr.isEmpty {
-            return "xmark.circle.fill"
-        }
-        return "checkmark.circle.fill"
-    }
-    
-    private func loadThumbnail() {
-        let manager = PHImageManager.default()
-        let options = PHImageRequestOptions()
-        options.deliveryMode = .highQualityFormat
-        options.resizeMode = .exact
-        options.isNetworkAccessAllowed = false
-        
-        // Account for Retina displays - request 2x or 3x the display size
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        let targetSize = CGSize(width: size * scale, height: size * scale)
-        
-        manager.requestImage(
-            for: asset,
-            targetSize: targetSize,
-            contentMode: .aspectFill,
-            options: options
-        ) { image, _ in
-            DispatchQueue.main.async {
-                thumbnail = image
-            }
         }
     }
 }
