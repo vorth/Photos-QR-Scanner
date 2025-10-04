@@ -21,9 +21,12 @@ struct ExportPhotoInfo: Codable {
     let temperatureC: String
     let temperatureF: String
     let notes: String
+    let country: String
+    let state: String
+    let county: String
     
     enum CodingKeys: String, CodingKey {
-        case photoID, dateTimeOriginal, latitude, longitude, qrCode, temperatureC, temperatureF, notes
+        case photoID, dateTimeOriginal, latitude, longitude, qrCode, temperatureC, temperatureF, notes, country, state, county
     }
     
     func encode(to encoder: Encoder) throws {
@@ -35,6 +38,9 @@ struct ExportPhotoInfo: Codable {
         try container.encode(temperatureC, forKey: .temperatureC)
         try container.encode(temperatureF, forKey: .temperatureF)
         try container.encode(notes, forKey: .notes)
+        try container.encode(country, forKey: .country)
+        try container.encode(state, forKey: .state)
+        try container.encode(county, forKey: .county)
         if let qrCode = qrCode, !qrCode.isEmpty {
             try container.encode(qrCode, forKey: .qrCode)
         }
@@ -50,6 +56,9 @@ struct PhotoInfo: Identifiable {
     var temperatureC: String
     var temperatureF: String
     var notes: String = ""
+    var country: String = "Searching..."
+    var state: String = "Searching..."
+    var county: String = "Searching..."
     let asset: PHAsset
     
     init(asset: PHAsset) {
@@ -77,6 +86,35 @@ struct PhotoInfo: Identifiable {
         // Temperature data will be added asynchronously
         self.temperatureC = "Searching..."
         self.temperatureF = "Searching..."
+    }
+}
+
+struct LocationFetcher {
+    static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, String, String) -> Void) {
+        let urlString = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
+        guard let url = URL(string: urlString) else { return }
+        
+        var request = URLRequest(url: url)
+        request.addValue("Photos-QR-Scanner", forHTTPHeaderField: "User-Agent")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let address = json["address"] as? [String: Any] else {
+                DispatchQueue.main.async {
+                    completion("Unknown", "Unknown", "Unknown")
+                }
+                return
+            }
+            
+            let country = address["country"] as? String ?? "Unknown"
+            let state = address["state"] as? String ?? "Unknown"
+            let county = address["county"] as? String ?? "Unknown"
+            
+            DispatchQueue.main.async {
+                completion(country, state, county)
+            }
+        }.resume()
     }
 }
 
@@ -264,16 +302,6 @@ struct ContentView: View {
                         .textFieldStyle(.roundedBorder)
                     }
                     
-                    TableColumn("Photo ID") { photoInfo in
-                        Text(photoInfo.photoID)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.blue)
-                            .underline()
-                            .onTapGesture {
-                                deselectPhoto(photoInfo.photoID)
-                            }
-                    }
-                    
                     TableColumn("Date/Time Original") { photoInfo in
                         Text(photoInfo.dateTimeOriginal)
                             .font(.caption)
@@ -284,6 +312,21 @@ struct ContentView: View {
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
+
+                    TableColumn("Country") { photoInfo in
+                        Text(photoInfo.country)
+                            .font(.caption)
+                    }
+                    
+                    TableColumn("State") { photoInfo in
+                        Text(photoInfo.state)
+                            .font(.caption)
+                    }
+                    
+                    TableColumn("County") { photoInfo in
+                        Text(photoInfo.county)
+                            .font(.caption)
+                    }
                     
                     TableColumn("Temp (°C)") { photoInfo in
                         Text(photoInfo.temperatureC)
@@ -293,6 +336,16 @@ struct ContentView: View {
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
+                    }
+
+                    TableColumn("Photo ID") { photoInfo in
+                        Text(photoInfo.photoID)
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundColor(.blue)
+                            .underline()
+                            .onTapGesture {
+                                deselectPhoto(photoInfo.photoID)
+                            }
                     }
                 }
                 .padding()
@@ -370,6 +423,15 @@ struct ContentView: View {
                   let creation = asset.creationDate else {
                 print("No GPS or no creation date – cannot fetch historic temperature.")
                 return
+            }
+            
+            // Fetch location data
+            LocationFetcher.fetchLocation(at: location.coordinate) { country, state, county in
+                if let idx = self.selectedPhotoInfos.firstIndex(where: { $0.photoID == id }) {
+                    self.selectedPhotoInfos[idx].country = country
+                    self.selectedPhotoInfos[idx].state = state
+                    self.selectedPhotoInfos[idx].county = county
+                }
             }
     
             WeatherFetcher.fetchHistoricTemp(at: location.coordinate,
@@ -463,7 +525,10 @@ struct ContentView: View {
                 qrCode: qrCode.isEmpty ? nil : qrCode,
                 temperatureC: tempC,
                 temperatureF: tempF,
-                notes: photoNotes[info.photoID] ?? ""
+                notes: photoNotes[info.photoID] ?? "",
+                country: info.country,
+                state: info.state,
+                county: info.county
             )
         }
         let encoder = JSONEncoder()
