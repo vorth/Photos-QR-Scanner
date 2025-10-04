@@ -185,6 +185,140 @@ struct WeatherFetcher {
     }
 }
 
+struct PhotoInfoEdit {
+    var qrCode: String
+    var notes: String
+}
+
+struct EditPhotoView: View {
+    @Environment(\.dismiss) private var dismiss
+    let photoInfo: PhotoInfo
+    @State private var editedInfo: PhotoInfoEdit
+    let onSave: (PhotoInfoEdit) -> Void
+    @State private var previewImage: NSImage?
+    
+    init(photoInfo: PhotoInfo, qrCode: String, notes: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
+        self.photoInfo = photoInfo
+        self._editedInfo = State(initialValue: PhotoInfoEdit(
+            qrCode: qrCode,
+            notes: notes
+        ))
+        self.onSave = onSave
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            // Left side - Photo
+            if let image = previewImage {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(20)
+                    .background(Color(.textBackgroundColor))
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(20)
+                    .background(Color(.textBackgroundColor))
+            }
+            
+            // Right side - Form
+            ScrollView {
+                VStack(spacing: 20) {
+                    Group {
+                        VStack(alignment: .leading) {
+                            Text("QR Code")
+                                .font(.headline)
+                            TextField("Enter QR code", text: $editedInfo.qrCode)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        VStack(alignment: .leading) {
+                            Text("Notes")
+                                .font(.headline)
+                            TextField("Notes", text: $editedInfo.notes)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    Divider()
+                    
+                    Group {
+                        InfoRow(label: "Date/Time", value: photoInfo.dateTimeOriginal)
+                        InfoRow(label: "Location", value: photoInfo.latLong)
+                        InfoRow(label: "Country", value: photoInfo.country)
+                        InfoRow(label: "State", value: photoInfo.state)
+                        InfoRow(label: "County", value: photoInfo.county)
+                        InfoRow(label: "Temperature", value: "\(photoInfo.temperatureC) / \(photoInfo.temperatureF)")
+                    }
+                    
+                    Spacer()
+                    
+                    HStack {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .keyboardShortcut(.cancelAction)
+                        
+                        Button("Save") {
+                            onSave(editedInfo)
+                            dismiss()
+                        }
+                        .keyboardShortcut(.defaultAction)
+                    }
+                }
+                .padding()
+            }
+            .frame(width: 350)
+            .background(Color(.controlBackgroundColor))
+        }
+        .frame(minWidth: 800, minHeight: 500)
+        .onAppear {
+            loadPreviewImage()
+        }
+    }
+    
+  
+    private func loadPreviewImage() {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = false
+        
+        manager.requestImage(
+            for: photoInfo.asset,
+            targetSize: CGSize(width: 2048, height: 2048),
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            if let image = image {
+                DispatchQueue.main.async {
+                    self.previewImage = image
+                }
+            }
+        }
+    }
+}
+
+struct InfoRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.headline)
+                .frame(width: 100, alignment: .leading)
+            Text(value)
+                .font(.body)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: 400, alignment: .leading)
+    }
+}
+
 struct ContentView: View {
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
@@ -194,12 +328,30 @@ struct ContentView: View {
     @State private var thumbnailSize: Double = 100
     @State private var photoNotes: [String: String] = [:]
     @State private var manualQRCodes: [String: String] = [:]
+    @State private var editingPhoto: PhotoInfo? = nil
     
     var body: some View {
         mainView
             .navigationTitle("Photos Metadata")
             .onAppear {
                 checkPermissions()
+            }
+            .sheet(item: $editingPhoto) { photoInfo in
+                EditPhotoView(
+                    photoInfo: photoInfo,
+                    qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
+                    notes: photoNotes[photoInfo.photoID, default: ""]
+                ) { editedInfo in
+                    // Update the corresponding PhotoInfo in selectedPhotoInfos
+                    if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
+                        selectedPhotoInfos[index].qrCode = editedInfo.qrCode
+                        selectedPhotoInfos[index].notes = editedInfo.notes
+                    }
+                    
+                    // Update QR code result and notes immediately
+                    qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
+                    photoNotes[photoInfo.photoID] = editedInfo.notes
+                }
             }
     }
     
@@ -276,30 +428,25 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Table(selectedPhotoInfos) {
+                    TableColumn("") { photoInfo in
+                        Button {
+                            editingPhoto = photoInfo
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .width(40)
+                    
                     TableColumn("QR Code") { photoInfo in
-                        let qrResult = qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode
-                        TextField("Enter QR code", text: Binding(
-                            get: {
-                                if qrResult == "Scanning..." { return "" }
-                                if qrResult == "No QR code" { return "" }
-                                return manualQRCodes[photoInfo.photoID] ?? qrResult
-                            },
-                            set: { newValue in
-                                manualQRCodes[photoInfo.photoID] = newValue
-                                qrCodeResults[photoInfo.photoID] = newValue.isEmpty ? "" : newValue
-                            }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
+                        Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
+                            .font(.caption)
                     }
                     
                     TableColumn("Notes") { photoInfo in
-                        TextField("Notes", text: Binding(
-                            get: { photoNotes[photoInfo.photoID, default: ""] },
-                            set: { photoNotes[photoInfo.photoID] = $0 }
-                        ))
-                        .font(.caption)
-                        .textFieldStyle(.roundedBorder)
+                        Text(photoNotes[photoInfo.photoID, default: ""])
+                            .font(.caption)
                     }
                     
                     TableColumn("Date/Time Original") { photoInfo in
@@ -336,16 +483,6 @@ struct ContentView: View {
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
-                    }
-
-                    TableColumn("Photo ID") { photoInfo in
-                        Text(photoInfo.photoID)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.blue)
-                            .underline()
-                            .onTapGesture {
-                                deselectPhoto(photoInfo.photoID)
-                            }
                     }
                 }
                 .padding()
