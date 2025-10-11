@@ -10,9 +10,8 @@ struct PhotoInfo: Identifiable {
     var temperatureC: String
     var temperatureF: String
     var notes: String = ""
-    var country: String = "Searching..."
-    var state: String = "Searching..."
-    var county: String = "Searching..."
+    var location: String = "Searching..."
+    var address: [String: Any]?
     let asset: PHAsset
     
     init(asset: PHAsset) {

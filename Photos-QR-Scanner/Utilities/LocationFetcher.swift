@@ -2,8 +2,8 @@ import CoreLocation
 import Foundation
 
 struct LocationFetcher {
-    static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, String, String) -> Void) {
-        let urlString = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
+    static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, [String: Any]?) -> Void) {
+        let urlString = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)&zoom=9"
         guard let url = URL(string: urlString) else { return }
         
         var request = URLRequest(url: url)
@@ -14,17 +14,15 @@ struct LocationFetcher {
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let address = json["address"] as? [String: Any] else {
                 DispatchQueue.main.async {
-                    completion("Unknown", "Unknown", "Unknown")
+                    completion("Unknown",  nil)
                 }
                 return
             }
             
-            let country = address["country"] as? String ?? "Unknown"
-            let state = address["state"] as? String ?? "Unknown"
-            let county = address["county"] as? String ?? "Unknown"
+            let location = json["display_name"] as? String ?? "Unknown"
             
             DispatchQueue.main.async {
-                completion(country, state, county)
+                completion(location, address)
             }
         }.resume()
     }

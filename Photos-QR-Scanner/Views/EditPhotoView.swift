@@ -63,10 +63,8 @@ struct EditPhotoView: View {
                     
                     Group {
                         InfoRow(label: "Date/Time", value: photoInfo.dateTimeOriginal)
-                        InfoRow(label: "Location", value: photoInfo.latLong)
-                        InfoRow(label: "Country", value: photoInfo.country)
-                        InfoRow(label: "State", value: photoInfo.state)
-                        InfoRow(label: "County", value: photoInfo.county)
+                        InfoRow(label: "Lat/Long", value: photoInfo.latLong)
+                        InfoRow(label: "Location", value: photoInfo.location)
                         InfoRow(label: "Temperature", value: "\(photoInfo.temperatureC) / \(photoInfo.temperatureF)")
                     }
                     
