@@ -144,19 +144,9 @@ struct ContentView: View {
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
-
-                    TableColumn("Country") { photoInfo in
-                        Text(photoInfo.country)
-                            .font(.caption)
-                    }
                     
-                    TableColumn("State") { photoInfo in
-                        Text(photoInfo.state)
-                            .font(.caption)
-                    }
-                    
-                    TableColumn("County") { photoInfo in
-                        Text(photoInfo.county)
+                    TableColumn("Location") { photoInfo in
+                        Text(photoInfo.location)
                             .font(.caption)
                     }
                     
@@ -248,11 +238,17 @@ struct ContentView: View {
             }
             
             // Fetch location data
-            LocationFetcher.fetchLocation(at: location.coordinate) { country, state, county in
+            LocationFetcher.fetchLocation(at: location.coordinate) { locationName, address in
                 if let idx = self.selectedPhotoInfos.firstIndex(where: { $0.photoID == id }) {
-                    self.selectedPhotoInfos[idx].country = country
-                    self.selectedPhotoInfos[idx].state = state
-                    self.selectedPhotoInfos[idx].county = county
+                    
+                    // Process location: ISO3166-2-lvl4 + first part
+                    let firstPart = locationName.components(separatedBy: ",").first?.trimmingCharacters(in: .whitespaces) ?? locationName
+                    let firstPartProcessed = firstPart.replacingOccurrences(of: "County", with: "Co.")
+                    let iso3166 = address?["ISO3166-2-lvl4"] as? String ?? ""
+                    let processedLocation = iso3166.isEmpty ? firstPartProcessed : "\(iso3166), \(firstPartProcessed)"
+                    
+                    self.selectedPhotoInfos[idx].location = processedLocation
+                    self.selectedPhotoInfos[idx].address = address
                 }
             }
     
@@ -339,6 +335,7 @@ struct ContentView: View {
             let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
             let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
+            let addressCodable = info.address?.mapValues { AnyCodable($0) }
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
@@ -348,9 +345,8 @@ struct ContentView: View {
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
-                country: info.country,
-                state: info.state,
-                county: info.county
+                location: info.location,
+                address: addressCodable
             )
         }
         let encoder = JSONEncoder()
