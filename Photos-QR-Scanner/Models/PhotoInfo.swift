@@ -20,8 +20,7 @@ struct PhotoInfo: Identifiable {
         self.photoID = asset.localIdentifier
         
         let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .medium
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss" // "2025-10-14 14:30:45"
         
         self.dateTimeOriginal = asset.creationDate.map { formatter.string(from: $0) } ?? "Unknown"
         
