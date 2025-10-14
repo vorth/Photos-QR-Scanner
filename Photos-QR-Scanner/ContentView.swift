@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var qrCodeResults: [String: String] = [:]
     @State private var thumbnailSize: Double = 100
     @State private var photoNotes: [String: String] = [:]
+    @State private var photoCollectors: [String: String] = [:]
     @State private var manualQRCodes: [String: String] = [:]
     @State private var editingPhoto: PhotoInfo? = nil
     
@@ -25,17 +26,20 @@ struct ContentView: View {
                 EditPhotoView(
                     photoInfo: photoInfo,
                     qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
-                    notes: photoNotes[photoInfo.photoID, default: ""]
+                    notes: photoNotes[photoInfo.photoID, default: ""],
+                    collector: photoCollectors[photoInfo.photoID, default: ""]
                 ) { editedInfo in
                     // Update the corresponding PhotoInfo in selectedPhotoInfos
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
                         selectedPhotoInfos[index].qrCode = editedInfo.qrCode
                         selectedPhotoInfos[index].notes = editedInfo.notes
+                        selectedPhotoInfos[index].collector = editedInfo.collector
                     }
                     
-                    // Update QR code result and notes immediately
+                    // Update QR code result, notes, and collector immediately
                     qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
                     photoNotes[photoInfo.photoID] = editedInfo.notes
+                    photoCollectors[photoInfo.photoID] = editedInfo.collector
                 }
             }
     }
@@ -134,29 +138,29 @@ struct ContentView: View {
                             .font(.caption)
                     }
                     
-                    TableColumn("Date/Time Original") { photoInfo in
+                    TableColumn("Date/Time") { photoInfo in
                         Text(photoInfo.dateTimeOriginal)
                             .font(.caption)
                     }
-                    
+                  
+                    TableColumn("Location") { photoInfo in
+                        Text(photoInfo.location)
+                            .font(.caption)
+                    }
+
                     TableColumn("Lat/Long") { photoInfo in
                         Text(photoInfo.latLong)
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
-                    
-                    TableColumn("Location") { photoInfo in
-                        Text(photoInfo.location)
-                            .font(.caption)
-                    }
-                    
-                    TableColumn("Temp (°C)") { photoInfo in
-                        Text(photoInfo.temperatureC)
-                            .font(.caption)
-                    }
-                    
+                                        
                     TableColumn("Temp (°F)") { photoInfo in
                         Text(photoInfo.temperatureF)
+                            .font(.caption)
+                    }
+                  
+                    TableColumn("Collector") { photoInfo in
+                        Text(photoCollectors[photoInfo.photoID, default: ""])
                             .font(.caption)
                     }
                 }
@@ -223,6 +227,8 @@ struct ContentView: View {
             selectedIDs.remove(id)
             selectedPhotoInfos.removeAll { $0.photoID == id }
             qrCodeResults.removeValue(forKey: id)
+            photoNotes.removeValue(forKey: id)
+            photoCollectors.removeValue(forKey: id)
         } else {
             selectedIDs.insert(id)
             let photoInfo = PhotoInfo(asset: asset)
@@ -274,6 +280,8 @@ struct ContentView: View {
         selectedIDs.remove(photoID)
         selectedPhotoInfos.removeAll { $0.photoID == photoID }
         qrCodeResults.removeValue(forKey: photoID)
+        photoNotes.removeValue(forKey: photoID)
+        photoCollectors.removeValue(forKey: photoID)
     }
     
     private func detectQRCode(for asset: PHAsset) {
@@ -345,6 +353,7 @@ struct ContentView: View {
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
+                collector: photoCollectors[info.photoID] ?? "",
                 location: info.location,
                 address: addressCodable
             )

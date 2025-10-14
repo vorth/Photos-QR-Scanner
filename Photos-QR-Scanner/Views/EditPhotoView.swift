@@ -4,6 +4,7 @@ import Photos
 struct PhotoInfoEdit {
     var qrCode: String
     var notes: String
+    var collector: String
 }
 
 struct EditPhotoView: View {
@@ -13,11 +14,12 @@ struct EditPhotoView: View {
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: NSImage?
     
-    init(photoInfo: PhotoInfo, qrCode: String, notes: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
+    init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
         self.photoInfo = photoInfo
         self._editedInfo = State(initialValue: PhotoInfoEdit(
             qrCode: qrCode,
-            notes: notes
+            notes: notes,
+            collector: collector
         ))
         self.onSave = onSave
     }
@@ -47,6 +49,13 @@ struct EditPhotoView: View {
                             Text("QR Code")
                                 .font(.headline)
                             TextField("Enter QR code", text: $editedInfo.qrCode)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        VStack(alignment: .leading) {
+                            Text("Collector")
+                                .font(.headline)
+                            TextField("Enter collector name", text: $editedInfo.collector)
                                 .textFieldStyle(.roundedBorder)
                         }
                         
