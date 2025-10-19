@@ -5,6 +5,7 @@ import CoreGraphics
 import CoreLocation
 
 struct ContentView: View {
+    @EnvironmentObject private var collectorManager: CollectorPreferencesManager
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
     @State private var selectedIDs: Set<String> = []
@@ -40,6 +41,11 @@ struct ContentView: View {
                     qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
                     photoNotes[photoInfo.photoID] = editedInfo.notes
                     photoCollectors[photoInfo.photoID] = editedInfo.collector
+                    
+                    // Save the collector value to preferences if it's not empty
+                    if !editedInfo.collector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        collectorManager.addCollector(editedInfo.collector)
+                    }
                 }
             }
     }
