@@ -127,12 +127,21 @@ struct ContentView: View {
                         Button {
                             editingPhoto = photoInfo
                         } label: {
-                            Image(systemName: "pencil")
-                                .foregroundColor(.blue)
+                            HStack(spacing: 4) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 18))
+                                Text("Edit")
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.blue)
+                            .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
+                        .help("Edit photo information")
                     }
-                    .width(40)
+                    .width(70)
                     
                     TableColumn("QR Code") { photoInfo in
                         Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
