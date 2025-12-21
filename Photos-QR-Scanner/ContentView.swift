@@ -96,7 +96,13 @@ struct ContentView: View {
                             onTap: {
                                 toggleSelection(asset)
                             },
-                            qrCodeResult: qrCodeResults[asset.localIdentifier] // <-- Pass QR code result
+                            qrCodeResult: qrCodeResults[asset.localIdentifier],
+                            onEdit: selectedIDs.contains(asset.localIdentifier) ? {
+                                // Find the corresponding PhotoInfo for this asset
+                                if let photoInfo = selectedPhotoInfos.first(where: { $0.photoID == asset.localIdentifier }) {
+                                    editingPhoto = photoInfo
+                                }
+                            } : nil
                         )
                     }
                 }
