@@ -7,8 +7,10 @@ struct ThumbnailView: View {
     let size: Double
     let onTap: () -> Void
     let qrCodeResult: String?
+    let onEdit: (() -> Void)?
     
     @State private var thumbnail: NSImage?
+    @State private var isHovering: Bool = false
     
     var body: some View {
         ZStack {
@@ -27,21 +29,52 @@ struct ThumbnailView: View {
                     .controlSize(.small)
             }
             
+            // Edit button (upper left)
+            if let onEdit = onEdit, isHovering {
+                VStack {
+                    HStack {
+                        Button {
+                            onEdit()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 18))
+                                Text("Edit")
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.blue)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.borderless)
+                        .padding(4)
+                        .help("Edit photo information")
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .allowsHitTesting(true)
+                .zIndex(1)
+            }
+            
             if isSelected {
                 Rectangle()
                     .fill(selectionColor.opacity(0.3))
                     .frame(width: size, height: size)
                 
-                VStack {
-                    HStack {
+                if isHovering {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Image(systemName: selectionIcon)
+                                .foregroundColor(.white)
+                                .background(selectionColor)
+                                .clipShape(Circle())
+                                .padding(4)
+                        }
                         Spacer()
-                        Image(systemName: selectionIcon)
-                            .foregroundColor(.white)
-                            .background(selectionColor)
-                            .clipShape(Circle())
-                            .padding(4)
                     }
-                    Spacer()
                 }
                 if let qr = qrCodeResult, qr.isEmpty {
                     Text("No QR Code")
@@ -64,6 +97,9 @@ struct ThumbnailView: View {
         )
         .onTapGesture {
             onTap()
+        }
+        .onHover { hovering in
+            isHovering = hovering
         }
         .onAppear {
             loadThumbnail()
