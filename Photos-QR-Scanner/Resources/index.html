@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Metadata Viewer</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Photo Metadata Viewer</h1>
+        <div id="content"></div>
+    </div>
+    
+    <script>
+        async function loadPhotos() {
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading">Loading photos...</div>';
+            
+            try {
+                const response = await fetch('/api/photos');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const photos = await response.json();
+                
+                if (!Array.isArray(photos) || photos.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h2>No photos found</h2>
+                            <p>Export photos from the app to view them here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '<div class="photos-grid">';
+                photos.forEach(photo => {
+                    html += createPhotoCard(photo);
+                });
+                html += '</div>';
+                
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading photos:', error);
+                content.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> Failed to load photo data. ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function createPhotoCard(photo) {
+            const formatValue = (val) => val && val.toString().trim() ? val : '<span class="empty">—</span>';
+            const tempC = photo.temperatureC && photo.temperatureC !== '—' ? photo.temperatureC + '°C' : '—';
+            const tempF = photo.temperatureF && photo.temperatureF !== '—' ? photo.temperatureF + '°F' : '—';
+            const qrCode = photo.qrCode || 'None';
+            
+            return `
+                <div class="photo-card">
+                    <div class="photo-card-header">
+                        <div class="photo-id">ID: ${photo.photoID}</div>
+                    </div>
+                    <div class="photo-card-body">
+                        <div class="info-row">
+                            <span class="info-label">Date/Time</span>
+                            <span class="info-value">${formatValue(photo.dateTimeOriginal)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">
+                                <span class="badge badge-location">${formatValue(photo.location)}</span>
+                            </span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Coordinates</span>
+                            <span class="info-value coordinates">${photo.latitude}, ${photo.longitude}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Temperature</span>
+                            <span class="info-value">${tempC} / ${tempF}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">QR Code</span>
+                            <span class="info-value ${!photo.qrCode ? 'empty' : ''}">${qrCode}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Notes</span>
+                            <span class="info-value ${!photo.notes ? 'empty' : ''}">${photo.notes || 'None'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Collector</span>
+                            <span class="info-value ${!photo.collector ? 'empty' : ''}">
+                                <span class="badge badge-collector">${photo.collector || 'Unknown'}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load photos when page is ready
+        document.addEventListener('DOMContentLoaded', loadPhotos);
+    </script>
+</body>
+</html>

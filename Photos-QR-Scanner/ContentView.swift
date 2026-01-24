@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var photoCollectors: [String: String] = [:]
     @State private var manualQRCodes: [String: String] = [:]
     @State private var editingPhoto: PhotoInfo? = nil
+    @State private var httpServer: HTTPServer?
+    @State private var isServerRunning: Bool = false
     
     var body: some View {
         mainView
@@ -117,11 +119,18 @@ struct ContentView: View {
                 .font(.headline)
                 .padding()
             
-            Button("Export to JSON") {
-                exportSelectedPhotosToJSON()
+            HStack(spacing: 12) {
+                Button("Export to JSON") {
+                    exportSelectedPhotosToJSON()
+                }
+                .disabled(selectedPhotoInfos.isEmpty)
+                
+                Button("View in Browser") {
+                    viewInBrowser()
+                }
+                .disabled(selectedPhotoInfos.isEmpty)
             }
             .padding(.horizontal)
-            .disabled(selectedPhotoInfos.isEmpty)
 
             if selectedPhotoInfos.isEmpty {
                 Text("Select photos to view metadata")
@@ -399,6 +408,65 @@ struct ContentView: View {
             }
         } catch {
             print("Export failed: \(error)")
+        }
+    }
+
+    private func viewInBrowser() {
+        print("ContentView: viewInBrowser() called")
+        // First, create the JSON data
+        let exportData = selectedPhotoInfos.map { info in
+            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
+            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
+            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
+            let addressCodable = info.address?.mapValues { AnyCodable($0) }
+            return ExportPhotoInfo(
+                photoID: info.photoID,
+                dateTimeOriginal: info.dateTimeOriginal,
+                latitude: latitude,
+                longitude: longitude,
+                qrCode: qrCode.isEmpty ? nil : qrCode,
+                temperatureC: tempC,
+                temperatureF: tempF,
+                notes: photoNotes[info.photoID] ?? "",
+                collector: photoCollectors[info.photoID] ?? "",
+                location: info.location,
+                address: addressCodable
+            )
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        do {
+            let jsonData = try encoder.encode(exportData)
+            
+            // Start the HTTP server
+            let server = HTTPServer(port: 8000)
+            self.httpServer = server
+            
+            Task {
+                do {
+                    let url = try await server.startServer(with: jsonData)
+                    print("Server started at \(url)")
+                    
+                    // Open the URL in the default browser
+                    NSWorkspace.shared.open(url)
+                    
+                    DispatchQueue.main.async {
+                        self.isServerRunning = true
+                    }
+                } catch {
+                    print("Failed to start server: \(error)")
+                    DispatchQueue.main.async {
+                        self.isServerRunning = false
+                    }
+                }
+            }
+        } catch {
+            print("Failed to create JSON: \(error)")
         }
     }
 }
