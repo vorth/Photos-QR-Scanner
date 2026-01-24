@@ -12,7 +12,7 @@
         <div id="content"></div>
     </div>
     
-    <script>
+    <script type="module">
         async function loadPhotos() {
             const content = document.getElementById('content');
             content.innerHTML = '<div class="loading">Loading photos...</div>';
@@ -100,8 +100,7 @@
             `;
         }
         
-        // Load photos when page is ready
-        document.addEventListener('DOMContentLoaded', loadPhotos);
-    </script>
+        loadPhotos();
+      </script>
 </body>
 </html>
