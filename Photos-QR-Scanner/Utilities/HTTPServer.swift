@@ -2,7 +2,7 @@ import Foundation
 import Darwin
 
 class HTTPServer: NSObject {
-    private var jsonData: Data?
+    private var jsonDataProvider: (() -> Data)?
     private let port: UInt16
     private var listeningSocket: Int32 = -1
     private var isRunning = false
@@ -12,9 +12,9 @@ class HTTPServer: NSObject {
         super.init()
     }
     
-    func startServer(with jsonData: Data) async throws -> URL {
+    func startServer(with jsonDataProvider: @escaping () -> Data) async throws -> URL {
         print("HTTPServer.startServer called")
-        self.jsonData = jsonData
+        self.jsonDataProvider = jsonDataProvider
         
         print("HTTPServer: Starting background server thread")
         // Start the server on a background thread
@@ -139,16 +139,24 @@ class HTTPServer: NSObject {
         print("HTTPServer: Request path: \(path)")
         
         // Generate response
-        if path == "/api/photos" {
+        if path == "/specimens.json" {
             print("HTTPServer: Serving JSON")
             let (body, contentType) = getJSONResponse()
             sendHTTPResponse(socket: socket, body: body, contentType: contentType)
-        } else if path == "/style.css" {
+        } else if path == "/styles.css" {
             print("HTTPServer: Attempting to load CSS")
-            if let cssContent = loadResourceFile(name: "style", ext: "css") {
+            if let cssContent = loadResourceFile(name: "styles", ext: "css") {
                 sendHTTPResponse(socket: socket, body: cssContent, contentType: "text/css")
             } else {
                 print("HTTPServer: CSS not found, sending 404")
+                sendHTTPErrorResponse(socket: socket, statusCode: 404, message: "Not Found")
+            }
+        } else if path == "/script.js" {
+            print("HTTPServer: Attempting to load JavaScript")
+            if let jsContent = loadResourceFile(name: "script", ext: "js") {
+                sendHTTPResponse(socket: socket, body: jsContent, contentType: "application/javascript")
+            } else {
+                print("HTTPServer: JavaScript not found, sending 404")
                 sendHTTPErrorResponse(socket: socket, statusCode: 404, message: "Not Found")
             }
         } else {
@@ -165,7 +173,7 @@ class HTTPServer: NSObject {
                         <h1>Photo Viewer</h1>
                         <p>Loading...</p>
                         <script>
-                            fetch('/api/photos').then(r => r.json()).then(data => {
+                            fetch('/specimens.json').then(r => r.json()).then(data => {
                                 console.log('Photos:', data);
                                 document.body.innerHTML = '<h1>Photos Loaded</h1><pre>' + JSON.stringify(data, null, 2) + '</pre>';
                             }).catch(e => {
@@ -182,10 +190,14 @@ class HTTPServer: NSObject {
     }
     
     private func getJSONResponse() -> (String, String) {
-        if let jsonData = jsonData,
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            return (jsonString, "application/json")
+        if let provider = jsonDataProvider {
+            let jsonData = provider()
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("HTTPServer: Serving fresh JSON data (\(jsonData.count) bytes)")
+                return (jsonString, "application/json")
+            }
         }
+        print("HTTPServer: No JSON data provider, returning empty array")
         return ("[]", "application/json")
     }
     
@@ -267,7 +279,13 @@ class HTTPServer: NSObject {
     }
     
     func stop() {
-        // Server cleanup handled automatically
+        print("HTTPServer: Stopping server...")
+        isRunning = false
+        if listeningSocket >= 0 {
+            Darwin.shutdown(listeningSocket, SHUT_RDWR)
+            Darwin.close(listeningSocket)
+            listeningSocket = -1
+        }
     }
     
     deinit {

@@ -4,6 +4,14 @@ import Vision
 import CoreGraphics
 import CoreLocation
 
+// Helper class to hold data that the server can access
+class PhotoDataHolder {
+    var photoInfos: [PhotoInfo] = []
+    var qrCodeResults: [String: String] = [:]
+    var photoNotes: [String: String] = [:]
+    var photoCollectors: [String: String] = [:]
+}
+
 struct ContentView: View {
     @EnvironmentObject private var collectorManager: CollectorPreferencesManager
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
@@ -18,12 +26,17 @@ struct ContentView: View {
     @State private var editingPhoto: PhotoInfo? = nil
     @State private var httpServer: HTTPServer?
     @State private var isServerRunning: Bool = false
+    @State private var dataHolder = PhotoDataHolder()
     
     var body: some View {
         mainView
             .navigationTitle("Photos Metadata")
             .onAppear {
                 checkPermissions()
+                startServerIfNeeded()
+            }
+            .onDisappear {
+                httpServer?.stop()
             }
             .sheet(item: $editingPhoto) { photoInfo in
                 EditPhotoView(
@@ -43,6 +56,9 @@ struct ContentView: View {
                     qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
                     photoNotes[photoInfo.photoID] = editedInfo.notes
                     photoCollectors[photoInfo.photoID] = editedInfo.collector
+                    
+                    // Update data holder for server
+                    updateDataHolder()
                     
                     // Save the collector value to preferences if it's not empty
                     if !editedInfo.collector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -285,6 +301,7 @@ struct ContentView: View {
                     
                     self.selectedPhotoInfos[idx].location = processedLocation
                     self.selectedPhotoInfos[idx].address = address
+                                    self.updateDataHolder()
                 }
             }
     
@@ -300,8 +317,10 @@ struct ContentView: View {
                         
                         print("Historic temperature for \(id):",
                               tempC.map { "\($0)°C" } ?? "unknown")
+                                            updateDataHolder()
                     }
                 })
+                updateDataHolder()
             }
         }
     }
@@ -312,6 +331,7 @@ struct ContentView: View {
         qrCodeResults.removeValue(forKey: photoID)
         photoNotes.removeValue(forKey: photoID)
         photoCollectors.removeValue(forKey: photoID)
+        updateDataHolder()
     }
     
     private func detectQRCode(for asset: PHAsset) {
@@ -356,6 +376,7 @@ struct ContentView: View {
                     // Force UI update by updating the PhotoInfo object
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == asset.localIdentifier }) {
                         selectedPhotoInfos[index].qrCode = qrCodeResults[asset.localIdentifier] ?? ""
+                                        updateDataHolder()
                     }
                 }
             }
@@ -411,62 +432,87 @@ struct ContentView: View {
         }
     }
 
-    private func viewInBrowser() {
-        print("ContentView: viewInBrowser() called")
-        // First, create the JSON data
-        let exportData = selectedPhotoInfos.map { info in
-            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
-            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
-            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
-            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
-            let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
-            let addressCodable = info.address?.mapValues { AnyCodable($0) }
-            return ExportPhotoInfo(
-                photoID: info.photoID,
-                dateTimeOriginal: info.dateTimeOriginal,
-                latitude: latitude,
-                longitude: longitude,
-                qrCode: qrCode.isEmpty ? nil : qrCode,
-                temperatureC: tempC,
-                temperatureF: tempF,
-                notes: photoNotes[info.photoID] ?? "",
-                collector: photoCollectors[info.photoID] ?? "",
-                location: info.location,
-                address: addressCodable
-            )
+    private func updateDataHolder() {
+        dataHolder.photoInfos = selectedPhotoInfos
+        dataHolder.qrCodeResults = qrCodeResults
+        dataHolder.photoNotes = photoNotes
+        dataHolder.photoCollectors = photoCollectors
+    }
+
+    private func startServerIfNeeded() {
+        guard httpServer == nil else { return }
+        
+        print("ContentView: Starting HTTP server")
+        updateDataHolder()
+        
+        // Create a closure that generates fresh JSON data on each request
+        let jsonDataProvider: () -> Data = { [dataHolder] in
+            print("HTTPServer: Generating fresh JSON from current data")
+            let exportData = dataHolder.photoInfos.map { info in
+                let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
+                let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+                let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
+                let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+                let qrCode = dataHolder.qrCodeResults[info.photoID] ?? info.qrCode
+                let addressCodable = info.address?.mapValues { AnyCodable($0) }
+                return ExportPhotoInfo(
+                    photoID: info.photoID,
+                    dateTimeOriginal: info.dateTimeOriginal,
+                    latitude: latitude,
+                    longitude: longitude,
+                    qrCode: qrCode.isEmpty ? nil : qrCode,
+                    temperatureC: tempC,
+                    temperatureF: tempF,
+                    notes: dataHolder.photoNotes[info.photoID] ?? "",
+                    collector: dataHolder.photoCollectors[info.photoID] ?? "",
+                    location: info.location,
+                    address: addressCodable
+                )
+            }
+            
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            do {
+                let jsonData = try encoder.encode(exportData)
+                return jsonData
+            } catch {
+                print("Failed to encode JSON: \(error)")
+                return Data()
+            }
         }
         
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+        // Start the HTTP server
+        let server = HTTPServer(port: 8000)
+        self.httpServer = server
         
-        do {
-            let jsonData = try encoder.encode(exportData)
-            
-            // Start the HTTP server
-            let server = HTTPServer(port: 8000)
-            self.httpServer = server
-            
-            Task {
-                do {
-                    let url = try await server.startServer(with: jsonData)
-                    print("Server started at \(url)")
-                    
-                    // Open the URL in the default browser
-                    NSWorkspace.shared.open(url)
-                    
-                    DispatchQueue.main.async {
-                        self.isServerRunning = true
-                    }
-                } catch {
-                    print("Failed to start server: \(error)")
-                    DispatchQueue.main.async {
-                        self.isServerRunning = false
-                    }
+        Task {
+            do {
+                let url = try await server.startServer(with: jsonDataProvider)
+                print("Server started at \(url)")
+                
+                DispatchQueue.main.async {
+                    self.isServerRunning = true
+                }
+            } catch {
+                print("Failed to start server: \(error)")
+                DispatchQueue.main.async {
+                    self.isServerRunning = false
                 }
             }
-        } catch {
-            print("Failed to create JSON: \(error)")
+        }
+    }
+    
+    private func viewInBrowser() {
+        print("ContentView: viewInBrowser() called")
+        
+        // Just open the browser - server is already running
+        if isServerRunning {
+            let url = URL(string: "http://localhost:8000")!
+            NSWorkspace.shared.open(url)
+        } else {
+            print("Server not running yet")
         }
     }
 }
