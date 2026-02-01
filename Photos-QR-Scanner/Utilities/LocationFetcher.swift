@@ -3,7 +3,12 @@ import Foundation
 
 struct LocationFetcher {
     
-    // MARK: - Fetch Location with CoreLocation Reverse Geocoding and Elevation
+    // Fetch Location with CoreLocation Reverse Geocoding and Elevation
+    //
+    //  The elevation fetching is fine.  For the location description, however,
+    //    we probably want to roll back to using the approach we had, or maybe keep aspects of both.
+    //  I think we should make a location description field that is optional and editable,
+    //    so users can enter their own location description if they want, or refine the one we fetch.
     
     static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, [String: Any]?) -> Void) {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
