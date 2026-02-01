@@ -2,28 +2,93 @@ import CoreLocation
 import Foundation
 
 struct LocationFetcher {
+    
+    // MARK: - Fetch Location with CoreLocation Reverse Geocoding and Elevation
+    
     static func fetchLocation(at coordinate: CLLocationCoordinate2D, completion: @escaping (String, [String: Any]?) -> Void) {
-        let urlString = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)&zoom=9"
-        guard let url = URL(string: urlString) else { return }
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let geocoder = CLGeocoder()
         
-        var request = URLRequest(url: url)
-        request.addValue("Photos-QR-Scanner", forHTTPHeaderField: "User-Agent")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let address = json["address"] as? [String: Any] else {
+        // Perform reverse geocoding using CoreLocation
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            guard let placemark = placemarks?.first else {
                 DispatchQueue.main.async {
-                    completion("Unknown",  nil)
+                    completion("Unknown", nil)
                 }
                 return
             }
             
-            let location = json["display_name"] as? String ?? "Unknown"
+            // Format the display name
+            let displayName = formatPlacemark(placemark)
             
-            DispatchQueue.main.async {
-                completion(location, address)
+            // Create address dictionary
+            var address: [String: Any] = [:]
+            if let name = placemark.name { address["name"] = name }
+            if let thoroughfare = placemark.thoroughfare { address["road"] = thoroughfare }
+            if let subThoroughfare = placemark.subThoroughfare { address["house_number"] = subThoroughfare }
+            if let locality = placemark.locality { address["city"] = locality }
+            if let subLocality = placemark.subLocality { address["suburb"] = subLocality }
+            if let administrativeArea = placemark.administrativeArea { address["state"] = administrativeArea }
+            if let subAdministrativeArea = placemark.subAdministrativeArea { address["county"] = subAdministrativeArea }
+            if let postalCode = placemark.postalCode { address["postcode"] = postalCode }
+            if let country = placemark.country { address["country"] = country }
+            if let isoCountryCode = placemark.isoCountryCode { address["country_code"] = isoCountryCode }
+            
+            // Fetch elevation from Open-Elevation API
+            fetchElevation(at: coordinate) { elevation in
+                if let elevationMeters = elevation {
+                    let elevationFeet = elevationMeters * 3.28084
+                    address["elevation"] = String(format: "%.0fm / %.0fft", elevationMeters, elevationFeet)
+                }
+                
+                DispatchQueue.main.async {
+                    completion(displayName, address)
+                }
             }
+        }
+    }
+    
+    // MARK: - Fetch Elevation from Open-Elevation API
+    
+    static func fetchElevation(at coordinate: CLLocationCoordinate2D, completion: @escaping (Double?) -> Void) {
+        let urlString = "https://api.open-elevation.com/api/v1/lookup?locations=\(coordinate.latitude),\(coordinate.longitude)"
+        guard let url = URL(string: urlString) else {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let results = json["results"] as? [[String: Any]],
+                  let firstResult = results.first,
+                  let elevation = firstResult["elevation"] as? Double else {
+                completion(nil)
+                return
+            }
+            
+            completion(elevation)
         }.resume()
+    }
+    
+    // MARK: - Helper Methods
+    
+    private static func formatPlacemark(_ placemark: CLPlacemark) -> String {
+        var components: [String] = []
+        
+        if let name = placemark.name, name != placemark.locality {
+            components.append(name)
+        }
+        if let locality = placemark.locality {
+            components.append(locality)
+        }
+        if let administrativeArea = placemark.administrativeArea {
+            components.append(administrativeArea)
+        }
+        if let country = placemark.country {
+            components.append(country)
+        }
+        
+        return components.isEmpty ? "Unknown Location" : components.joined(separator: ", ")
     }
 }

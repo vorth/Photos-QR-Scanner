@@ -15,6 +15,14 @@ struct PhotoInfo: Identifiable {
     var address: [String: Any]?
     let asset: PHAsset
     
+    var elevation: String {
+        guard let address = address,
+              let elevation = address["elevation"] as? String else {
+            return "N/A"
+        }
+        return elevation
+    }
+    
     init(asset: PHAsset) {
         self.asset = asset
         self.photoID = asset.localIdentifier

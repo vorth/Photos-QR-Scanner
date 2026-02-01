@@ -31,7 +31,7 @@ function transformData(data) {
                     ${label.dateTimeOriginal}
                 </span>
                 <span>
-                    ${temperature} ${label.elevation || ''}
+                    ${temperature}, ${label.address?.elevation || ''}
                 </span>
                 <span>
                     ${label.collector}
