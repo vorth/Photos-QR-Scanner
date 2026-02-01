@@ -31,24 +31,24 @@
     --light-gray-level-2: rgb(228 228 231);
     --light-gray-level-3: rgb(244 244 245);
     --white: rgb(255 255 255);
-    --off-white: rgb(250 250 250)
+    --off-white: rgb(250 250 250);
 }
 
 html {
     font-family: Lato,"Helvetica Neue",Arial,Helvetica,sans-serif;
     font-weight: 400;
-    scroll-behavior: smooth
+    scroll-behavior: smooth;
 }
 
 body {
     background-color: var(--dark-gray-level-1);
     margin: auto;
-    max-width: 800px;
+    max-width: 800px;;
 }
 
 main {
     min-height: 100vh;
-    padding: 0
+    padding: 0;
 }
 
 main #overlay {
@@ -60,11 +60,11 @@ main #overlay {
     position: fixed;
     top: 0;
     width: 100vw;
-    z-index: 5
+    z-index: 5;
 }
 
 main #overlay.show {
-    display: block
+    display: block;
 }
 
 h1 {
@@ -72,49 +72,49 @@ h1 {
     color: var(--off-white);
     font-size: 1.5rem;
     margin: .75rem 1.5rem;
-    padding: 0 0 .75rem
+    padding: 0 0 .75rem;
 }
 
 h2 {
     color: var(--off-white);
     font-size: 1.25rem;
-    margin: .75rem 1.5rem
+    margin: .75rem 1.5rem;
 }
 
 p {
     color: var(--off-white);
-    margin: 0 1.5rem
+    margin: 0 1.5rem;
 }
 
 a {
     color: var(--light-green-level-2);
-    text-decoration: underline
+    text-decoration: underline;
 }
 
 a:visited {
-    color: var(--light-pink-level-2)
+    color: var(--light-pink-level-2);
 }
 
 a:focus-visible,a:hover {
-    text-decoration: none
+    text-decoration: none;
 }
 
 a:focus-visible {
     color: var(--off-white);
-    outline: var(--light-green-level-2) .125rem solid
+    outline: var(--light-green-level-2) .125rem solid;
 }
 
 a:visited:focus-visible {
-    outline: var(--light-pink-level-2) .125rem solid
+    outline: var(--light-pink-level-2) .125rem solid;
 }
 
 footer {
     color: var(--off-white);
-    margin: 3rem 1rem 1rem
+    margin: 3rem 1rem 1rem;
 }
 
 .hide {
-    display: none
+    display: none;
 }
 
 .visually-hidden:not(:focus-visible) {
@@ -123,7 +123,7 @@ footer {
     overflow: hidden;
     position: absolute;
     white-space: nowrap;
-    width: 1px
+    width: 1px;
 }
 
 #main-skip-link {
@@ -139,7 +139,7 @@ footer {
     text-decoration: underline;
     top: .5rem;
     width: 10rem;
-    z-index: 50
+    z-index: 50;
 }
 
 @media(min-width: 1300px) {
@@ -180,19 +180,19 @@ footer {
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;
-    margin: .75rem 1.5rem
+    margin: .75rem 1.5rem;
 }
 
 #label-output .single-label {
     align-items: center;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start
+    justify-content: flex-start;
 }
 
 #label-output .single-label p {
     color: var(--black);
-    margin: 0
+    margin: 0;
 }
 
 #label-output .single-label .label-locality,#label-output .single-label .label-notes,#label-output .single-label .label-taxonomy {
@@ -202,15 +202,15 @@ footer {
     justify-content: center;
     margin: .5px;
     padding: .48px .72px;
-    width: 82px
+    width: 60px;
 }
 
 #label-output .single-label .label-locality {
-    align-items: flex-start
+    align-items: flex-start;
 }
 
 #label-output .single-label .label-notes,#label-output .single-label .label-taxonomy {
-    align-items: center
+    align-items: center;
 }
 
 #label-output .single-label .label-locality span,#label-output .single-label .label-notes span,#label-output .single-label .label-notes p,#label-output .single-label .label-taxonomy span {
@@ -218,32 +218,32 @@ footer {
     font-size: 3pt;
     letter-spacing: -0.05px;
     line-height: 1.6;
-    width: 100%
+    width: 100%;
 }
 
 #label-output .single-label .label-locality span {
     margin: 0;
-    padding: 0
+    padding: 0;
 }
 
 #label-output .single-label .label-notes span,#label-output .single-label .label-notes p,#label-output .single-label .label-taxonomy span {
-    text-align: center
+    text-align: center;
 }
 
 #label-output .single-label .label-usi {
-    text-align: right
+    text-align: right;
 }
 
 
 @media print {
     div.no-print,#label-form.no-print,h2.no-print,p.no-print {
-        display: none
+        display: none;
     }
 
     #label-output {
         display: block;
         overflow-wrap: normal;
-        margin: 0
+        margin: 0;
     }
 
     #label-output .single-label {
@@ -251,10 +251,10 @@ footer {
         break-before: avoid;
         break-inside: avoid;
         display: inline-block;
-        margin: 0
+        margin: 0;
     }
 
     #label-output .single-label .label-locality,#label-output .single-label .label-notes,#label-output .single-label .label-taxonomy {
-        margin: 1px .5px
+        margin: 1px .5px;
     }
 }
