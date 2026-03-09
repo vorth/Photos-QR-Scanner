@@ -56,7 +56,9 @@ struct ExportPhotoInfo: Codable {
     let dateTimeOriginal: String
     let latitude: String
     let longitude: String
+    let elevation: String
     let qrCode: String?
+    let temperature: String
     let temperatureC: String
     let temperatureF: String
     let notes: String
@@ -65,7 +67,7 @@ struct ExportPhotoInfo: Codable {
     let address: [String: AnyCodable]?
     
     enum CodingKeys: String, CodingKey {
-        case photoID, dateTimeOriginal, latitude, longitude, qrCode, temperatureC, temperatureF, notes, collector, location, address
+        case photoID, dateTimeOriginal, latitude, longitude, elevation, qrCode, temperature, temperatureC, temperatureF, notes, collector, location, address
     }
     
     func encode(to encoder: Encoder) throws {
@@ -74,6 +76,8 @@ struct ExportPhotoInfo: Codable {
         try container.encode(dateTimeOriginal, forKey: .dateTimeOriginal)
         try container.encode(latitude, forKey: .latitude)
         try container.encode(longitude, forKey: .longitude)
+        try container.encode(elevation, forKey: .elevation)
+        try container.encode(temperature, forKey: .temperature)
         try container.encode(temperatureC, forKey: .temperatureC)
         try container.encode(temperatureF, forKey: .temperatureF)
         try container.encode(notes, forKey: .notes)
