@@ -43,7 +43,7 @@ function transformData(data) {
               </div>` : '' )
             + ( label.qrCode? `
               <div class="label-taxonomy">
-                  <span>
+                  <span class="label-id">
                       ${label.qrCode}
                   </span>
               </div>` : '' )
