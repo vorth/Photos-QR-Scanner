@@ -43,7 +43,7 @@ struct ContentView: View {
                     photoInfo: photoInfo,
                     qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
                     notes: photoNotes[photoInfo.photoID, default: ""],
-                    collector: photoCollectors[photoInfo.photoID, default: ""]
+                    collector: photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector
                 ) { editedInfo in
                     // Update the corresponding PhotoInfo in selectedPhotoInfos
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
@@ -141,7 +141,12 @@ struct ContentView: View {
                 }
                 .disabled(selectedPhotoInfos.isEmpty)
                 
-                Button("View in Browser") {
+                Button("Copy JSON") {
+                    copyJSONToClipboard()
+                }
+                .disabled(selectedPhotoInfos.isEmpty)
+                
+                Button("View Labels in Browser") {
                     viewInBrowser()
                 }
                 .disabled(selectedPhotoInfos.isEmpty)
@@ -206,7 +211,7 @@ struct ContentView: View {
                     }
                   
                     TableColumn("Collector") { photoInfo in
-                        Text(photoCollectors[photoInfo.photoID, default: ""])
+                        Text(photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector)
                             .font(.caption)
                     }
                 }
@@ -386,7 +391,7 @@ struct ContentView: View {
         }
     }
 
-    private func exportSelectedPhotosToJSON() {
+    private func buildExportJSON() -> String? {
         let exportData = selectedPhotoInfos.map { info in
             let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
@@ -395,7 +400,7 @@ struct ContentView: View {
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
             let temperature = "\(info.temperatureC)/\(info.temperatureF)"
             let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
-            let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
+            let addressCodable = info.address?.mapValues { AnyCodable($0) }
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
@@ -407,7 +412,53 @@ struct ContentView: View {
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
-                collector: photoCollectors[info.photoID] ?? "",
+                collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
+                location: info.location,
+                address: addressCodable
+            )
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        do {
+            let data = try encoder.encode(exportData)
+            if var jsonString = String(data: data, encoding: .utf8) {
+                jsonString = jsonString.replacingOccurrences(of: "\\/", with: "/")
+                return jsonString
+            }
+        } catch {
+            print("JSON encoding failed: \(error)")
+        }
+        return nil
+    }
+
+    private func copyJSONToClipboard() {
+        guard let jsonString = buildExportJSON() else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(jsonString, forType: .string)
+    }
+
+    private func exportSelectedPhotosToJSON() {
+        let exportData = selectedPhotoInfos.map { info in
+            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
+            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
+            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            let temperature = "\(info.temperatureC)/\(info.temperatureF)"
+            let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
+            let addressCodable = info.address?.mapValues { AnyCodable($0) }
+            return ExportPhotoInfo(
+                photoID: info.photoID,
+                dateTimeOriginal: info.dateTimeOriginal,
+                latitude: latitude,
+                longitude: longitude,
+                elevation: info.elevation,
+                qrCode: qrCode.isEmpty ? nil : qrCode,
+                temperature: temperature,
+                temperatureC: tempC,
+                temperatureF: tempF,
+                notes: photoNotes[info.photoID] ?? "",
+                collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
                 location: info.location,
                 address: addressCodable
             )
@@ -459,7 +510,7 @@ struct ContentView: View {
                 let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
                 let temperature = "\(info.temperatureC)/\(info.temperatureF)"
                 let qrCode = dataHolder.qrCodeResults[info.photoID] ?? info.qrCode
-                let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
+                let addressCodable = info.address?.mapValues { AnyCodable($0) }
                 return ExportPhotoInfo(
                     photoID: info.photoID,
                     dateTimeOriginal: info.dateTimeOriginal,
