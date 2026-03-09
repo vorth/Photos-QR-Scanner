@@ -43,7 +43,7 @@ struct ContentView: View {
                     photoInfo: photoInfo,
                     qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
                     notes: photoNotes[photoInfo.photoID, default: ""],
-                    collector: photoCollectors[photoInfo.photoID, default: ""]
+                    collector: photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector
                 ) { editedInfo in
                     // Update the corresponding PhotoInfo in selectedPhotoInfos
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
@@ -206,7 +206,7 @@ struct ContentView: View {
                     }
                   
                     TableColumn("Collector") { photoInfo in
-                        Text(photoCollectors[photoInfo.photoID, default: ""])
+                        Text(photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector)
                             .font(.caption)
                     }
                 }
@@ -395,7 +395,7 @@ struct ContentView: View {
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
             let temperature = "\(info.temperatureC)/\(info.temperatureF)"
             let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
-            let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
+            let addressCodable = info.address?.mapValues { AnyCodable($0) }
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
@@ -407,7 +407,7 @@ struct ContentView: View {
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
-                collector: photoCollectors[info.photoID] ?? "",
+                collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
                 location: info.location,
                 address: addressCodable
             )
@@ -459,7 +459,7 @@ struct ContentView: View {
                 let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
                 let temperature = "\(info.temperatureC)/\(info.temperatureF)"
                 let qrCode = dataHolder.qrCodeResults[info.photoID] ?? info.qrCode
-                let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
+                let addressCodable = info.address?.mapValues { AnyCodable($0) }
                 return ExportPhotoInfo(
                     photoID: info.photoID,
                     dateTimeOriginal: info.dateTimeOriginal,

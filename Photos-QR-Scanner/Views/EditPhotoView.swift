@@ -14,7 +14,6 @@ struct EditPhotoView: View {
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: NSImage?
-    @State private var showingCollectorSuggestions = false
     
     init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
         self.photoInfo = photoInfo
@@ -55,62 +54,23 @@ struct EditPhotoView: View {
                         }
                         
                         VStack(alignment: .leading) {
+                            Text("Collector")
+                                .font(.headline)
                             HStack {
-                                Text("Collector")
-                                    .font(.headline)
-                                Spacer()
-                                if !collectorManager.getAllCollectors().isEmpty {
-                                    Button(action: {
-                                        showingCollectorSuggestions.toggle()
-                                    }) {
-                                        Image(systemName: showingCollectorSuggestions ? "chevron.up" : "chevron.down")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
                                 TextField("Enter collector name", text: $editedInfo.collector)
                                     .textFieldStyle(.roundedBorder)
-                                
-                                if showingCollectorSuggestions && !collectorManager.getAllCollectors().isEmpty {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Previous collectors:")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        
-                                        ScrollView {
-                                            LazyVStack(alignment: .leading, spacing: 2) {
-                                                ForEach(collectorManager.getAllCollectors(), id: \.self) { collector in
-                                                    Button(action: {
-                                                        editedInfo.collector = collector
-                                                        showingCollectorSuggestions = false
-                                                    }) {
-                                                        HStack {
-                                                            Text(collector)
-                                                                .font(.system(.body, design: .monospaced))
-                                                                .foregroundColor(.primary)
-                                                            Spacer()
-                                                        }
-                                                        .padding(.horizontal, 8)
-                                                        .padding(.vertical, 4)
-                                                        .background(Color(.controlBackgroundColor))
-                                                        .cornerRadius(4)
-                                                    }
-                                                    .buttonStyle(PlainButtonStyle())
-                                                }
+                                if !collectorManager.getAllCollectors().isEmpty {
+                                    Menu {
+                                        ForEach(collectorManager.getAllCollectors(), id: \.self) { collector in
+                                            Button(collector) {
+                                                editedInfo.collector = collector
                                             }
                                         }
-                                        .frame(maxHeight: 120)
-                                        .background(Color(.textBackgroundColor))
-                                        .cornerRadius(6)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .stroke(Color(.separatorColor), lineWidth: 1)
-                                        )
+                                    } label: {
+                                        EmptyView()
                                     }
+                                    .menuStyle(.borderlessButton)
+                                    .fixedSize()
                                 }
                             }
                         }

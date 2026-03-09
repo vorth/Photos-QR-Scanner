@@ -38,6 +38,10 @@ class CollectorPreferencesManager: ObservableObject {
         }
     }
     
+    var lastCollector: String {
+        preferences.lastCollector
+    }
+    
     func addCollector(_ collector: String) {
         let trimmed = collector.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
