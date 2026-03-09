@@ -285,6 +285,11 @@ struct ContentView: View {
             let photoInfo = PhotoInfo(asset: asset)
             selectedPhotoInfos.append(photoInfo)
             
+            // Default collector to last-used value
+            if photoCollectors[id] == nil && !collectorManager.lastCollector.isEmpty {
+                photoCollectors[id] = collectorManager.lastCollector
+            }
+            
             // Start QR code detection for newly selected photo
             detectQRCode(for: asset)
             

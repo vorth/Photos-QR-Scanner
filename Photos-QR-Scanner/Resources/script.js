@@ -16,8 +16,6 @@ function transformData(data) {
         // const gpsLatitude = label.latitude ? `${label.latitude}°N` : '';
         // const gpsLongitude = label.longitude ? `${Math.abs(label.longitude)}°W` : '';
 
-        const temperature = `${label.temperatureC} (${label.temperatureF})`;
-
         return `<div class="single-label">
             <div class="label-locality">
                 <span>
@@ -31,7 +29,7 @@ function transformData(data) {
                     ${label.dateTimeOriginal}
                 </span>
                 <span>
-                    ${temperature}, ${label.address?.elevation || ''}
+                    ${label.temperature}, ${label.address?.elevation || ''}
                 </span>
                 <span>
                     ${label.collector}
