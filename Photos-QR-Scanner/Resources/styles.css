@@ -213,12 +213,16 @@ footer {
     align-items: center;
 }
 
-#label-output .single-label .label-locality span,#label-output .single-label .label-notes span,#label-output .single-label .label-notes p,#label-output .single-label .label-taxonomy span {
+#label-output .single-label .label-locality span,#label-output .single-label .label-notes span,#label-output .single-label .label-notes p {
     font-family: Geneva,sans-serif;
     font-size: 3pt;
     letter-spacing: -0.05px;
     line-height: 1.6;
     width: 100%;
+}
+
+.label-id {
+  font-size: 11pt;
 }
 
 #label-output .single-label .label-locality span {
