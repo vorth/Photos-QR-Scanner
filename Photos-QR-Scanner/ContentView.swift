@@ -252,7 +252,7 @@ struct ContentView: View {
     private func loadRecentPhotos() {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.fetchLimit = 200
+        options.fetchLimit = 2000
         
         let result = PHAsset.fetchAssets(with: .image, options: options)
         
@@ -310,10 +310,10 @@ struct ContentView: View {
                 DispatchQueue.main.async(execute: {
                     if let idx = selectedPhotoInfos.firstIndex(where: { $0.photoID == id }) {
                          selectedPhotoInfos[idx].temperatureC = tempC != nil ?
-                            String(format: "%.1f°C", tempC!) : "—"
+                            String(format: "%.0f°C", tempC!) : "—"
                          let f = tempC != nil ? tempC! * 9.0/5.0 + 32.0 : nil
                          selectedPhotoInfos[idx].temperatureF = f != nil ?
-                            String(format: "%.1f°F", f!) : "—"
+                            String(format: "%.0f°F", f!) : "—"
                         
                         print("Historic temperature for \(id):",
                               tempC.map { "\($0)°C" } ?? "unknown")
@@ -393,14 +393,17 @@ struct ContentView: View {
             let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
             let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+            let temperature = "\(info.temperatureC)/\(info.temperatureF)"
             let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
-            let addressCodable = info.address?.mapValues { AnyCodable($0) }
+            let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
                 latitude: latitude,
                 longitude: longitude,
+                elevation: info.elevation,
                 qrCode: qrCode.isEmpty ? nil : qrCode,
+                temperature: temperature,
                 temperatureC: tempC,
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
@@ -454,14 +457,17 @@ struct ContentView: View {
                 let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
                 let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
                 let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
+                let temperature = "\(info.temperatureC)/\(info.temperatureF)"
                 let qrCode = dataHolder.qrCodeResults[info.photoID] ?? info.qrCode
-                let addressCodable = info.address?.mapValues { AnyCodable($0) }
+                let addressCodable = info.address?.filter { $0.key != "elevation" }.mapValues { AnyCodable($0) }
                 return ExportPhotoInfo(
                     photoID: info.photoID,
                     dateTimeOriginal: info.dateTimeOriginal,
                     latitude: latitude,
                     longitude: longitude,
+                    elevation: info.elevation,
                     qrCode: qrCode.isEmpty ? nil : qrCode,
+                    temperature: temperature,
                     temperatureC: tempC,
                     temperatureF: tempF,
                     notes: dataHolder.photoNotes[info.photoID] ?? "",
