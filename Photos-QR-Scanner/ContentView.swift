@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var photoCollectors: [String: String] = [:]
     @State private var manualQRCodes: [String: String] = [:]
     @State private var editingPhoto: PhotoInfo? = nil
+    @State private var sortOrder: [KeyPathComparator<PhotoInfo>] = [KeyPathComparator(\.dateTimeOriginal, order: .forward)]
     @State private var httpServer: HTTPServer?
     @State private var isServerRunning: Bool = false
     @State private var dataHolder = PhotoDataHolder()
@@ -158,7 +159,7 @@ struct ContentView: View {
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                Table(selectedPhotoInfos) {
+                Table(selectedPhotoInfos, sortOrder: $sortOrder) {
                     TableColumn("") { photoInfo in
                         Button {
                             editingPhoto = photoInfo
@@ -189,23 +190,23 @@ struct ContentView: View {
                             .font(.caption)
                     }
                     
-                    TableColumn("Date/Time") { photoInfo in
+                    TableColumn("Date/Time", value: \.dateTimeOriginal) { photoInfo in
                         Text(photoInfo.dateTimeOriginal)
                             .font(.caption)
                     }
                   
-                    TableColumn("Location") { photoInfo in
+                    TableColumn("Location", value: \.location) { photoInfo in
                         Text(photoInfo.location)
                             .font(.caption)
                     }
 
-                    TableColumn("Lat/Long") { photoInfo in
+                    TableColumn("Lat/Long", value: \.latLong) { photoInfo in
                         Text(photoInfo.latLong)
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
                                         
-                    TableColumn("Temp (°F)") { photoInfo in
+                    TableColumn("Temp (°F)", value: \.temperatureF) { photoInfo in
                         Text(photoInfo.temperatureF)
                             .font(.caption)
                     }
@@ -216,6 +217,9 @@ struct ContentView: View {
                     }
                 }
                 .padding()
+                .onChange(of: sortOrder) {
+                    selectedPhotoInfos.sort(using: sortOrder)
+                }
             }
         }
     }
@@ -284,6 +288,7 @@ struct ContentView: View {
             selectedIDs.insert(id)
             let photoInfo = PhotoInfo(asset: asset)
             selectedPhotoInfos.append(photoInfo)
+            selectedPhotoInfos.sort(using: sortOrder)
             
             // Default collector to last-used value
             if photoCollectors[id] == nil && !collectorManager.lastCollector.isEmpty {
