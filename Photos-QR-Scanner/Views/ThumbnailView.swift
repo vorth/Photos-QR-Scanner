@@ -1,5 +1,8 @@
 import SwiftUI
 import Photos
+#if os(macOS)
+import AppKit
+#endif
 
 struct ThumbnailView: View {
     let asset: PHAsset
@@ -9,7 +12,7 @@ struct ThumbnailView: View {
     let qrCodeResult: String?
     let onEdit: (() -> Void)?
     
-    @State private var thumbnail: NSImage?
+    @State private var thumbnail: PlatformImage?
     @State private var isHovering: Bool = false
     
     var body: some View {
@@ -19,7 +22,7 @@ struct ThumbnailView: View {
                 .frame(width: size, height: size)
             
             if let thumbnail = thumbnail {
-                Image(nsImage: thumbnail)
+                platformImage(thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
@@ -30,7 +33,7 @@ struct ThumbnailView: View {
             }
             
             // Edit button (upper left)
-            if let onEdit = onEdit, isHovering {
+            if let onEdit = onEdit, isHovering || isSelected {
                 VStack {
                     HStack {
                         Button {
@@ -49,7 +52,9 @@ struct ThumbnailView: View {
                         }
                         .buttonStyle(.borderless)
                         .padding(4)
+                        #if os(macOS)
                         .help("Edit photo information")
+                        #endif
                         Spacer()
                     }
                     Spacer()
@@ -98,9 +103,11 @@ struct ThumbnailView: View {
         .onTapGesture {
             onTap()
         }
+        #if os(macOS)
         .onHover { hovering in
             isHovering = hovering
         }
+        #endif
         .onAppear {
             loadThumbnail()
         }
@@ -127,7 +134,11 @@ struct ThumbnailView: View {
         options.resizeMode = .exact
         options.isNetworkAccessAllowed = false
         
+        #if os(macOS)
         let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        #else
+        let scale = UIScreen.main.scale
+        #endif
         let targetSize = CGSize(width: size * scale, height: size * scale)
         
         manager.requestImage(
@@ -140,5 +151,13 @@ struct ThumbnailView: View {
                 thumbnail = image
             }
         }
+    }
+    
+    private func platformImage(_ image: PlatformImage) -> Image {
+        #if os(macOS)
+        Image(nsImage: image)
+        #else
+        Image(uiImage: image)
+        #endif
     }
 }

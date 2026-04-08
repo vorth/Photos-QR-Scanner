@@ -1,5 +1,8 @@
 import SwiftUI
 import Photos
+#if os(macOS)
+import AppKit
+#endif
 
 struct PhotoInfoEdit {
     var qrCode: String
@@ -13,7 +16,7 @@ struct EditPhotoView: View {
     let photoInfo: PhotoInfo
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
-    @State private var previewImage: NSImage?
+    @State private var previewImage: PlatformImage?
     
     init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
         self.photoInfo = photoInfo
@@ -29,17 +32,17 @@ struct EditPhotoView: View {
         HStack(spacing: 0) {
             // Left side - Photo
             if let image = previewImage {
-                Image(nsImage: image)
+                platformImage(image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(20)
-                    .background(Color(.textBackgroundColor))
+                    .background(photoBackground)
             } else {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(20)
-                    .background(Color(.textBackgroundColor))
+                    .background(photoBackground)
             }
             
             // Right side - Form
@@ -69,7 +72,9 @@ struct EditPhotoView: View {
                                     } label: {
                                         EmptyView()
                                     }
+                                    #if os(macOS)
                                     .menuStyle(.borderlessButton)
+                                    #endif
                                     .fixedSize()
                                 }
                             }
@@ -112,12 +117,38 @@ struct EditPhotoView: View {
                 .padding()
             }
             .frame(width: 350)
-            .background(Color(.controlBackgroundColor))
+            .background(formBackground)
         }
+        #if os(macOS)
         .frame(minWidth: 800, minHeight: 500)
+        #endif
         .onAppear {
             loadPreviewImage()
         }
+    }
+    
+    private var photoBackground: Color {
+        #if os(macOS)
+        Color(.textBackgroundColor)
+        #else
+        Color(.systemBackground)
+        #endif
+    }
+    
+    private var formBackground: Color {
+        #if os(macOS)
+        Color(.controlBackgroundColor)
+        #else
+        Color(.secondarySystemBackground)
+        #endif
+    }
+    
+    private func platformImage(_ image: PlatformImage) -> Image {
+        #if os(macOS)
+        Image(nsImage: image)
+        #else
+        Image(uiImage: image)
+        #endif
     }
     
     private func loadPreviewImage() {

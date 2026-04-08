@@ -3,6 +3,19 @@ import Photos
 import Vision
 import CoreGraphics
 import CoreLocation
+import WebKit
+import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
+
+#if os(macOS)
+typealias PlatformImage = NSImage
+#elseif os(iOS)
+typealias PlatformImage = UIImage
+#endif
 
 // Helper class to hold data that the server can access
 class PhotoDataHolder {
@@ -25,8 +38,11 @@ struct ContentView: View {
     @State private var manualQRCodes: [String: String] = [:]
     @State private var editingPhoto: PhotoInfo? = nil
     @State private var sortOrder: [KeyPathComparator<PhotoInfo>] = [KeyPathComparator(\.dateTimeOriginal, order: .forward)]
+    #if os(macOS)
     @State private var httpServer: HTTPServer?
     @State private var isServerRunning: Bool = false
+    #endif
+    @State private var showingLabelView: Bool = false
     @State private var dataHolder = PhotoDataHolder()
     
     var body: some View {
@@ -34,11 +50,15 @@ struct ContentView: View {
             .navigationTitle("Photos Metadata")
             .onAppear {
                 checkPermissions()
+                #if os(macOS)
                 startServerIfNeeded()
+                #endif
             }
+            #if os(macOS)
             .onDisappear {
                 httpServer?.stop()
             }
+            #endif
             .sheet(item: $editingPhoto) { photoInfo in
                 EditPhotoView(
                     photoInfo: photoInfo,
@@ -72,12 +92,25 @@ struct ContentView: View {
     private var mainView: some View {
         Group {
             if authStatus == .authorized || authStatus == .limited {
+                #if os(macOS)
                 HSplitView {
                     photoGridView
                         .frame(minWidth: 250, idealWidth: 400, maxWidth: .infinity)
                     metadataTableView
                         .frame(minWidth: 350, idealWidth: 500, maxWidth: .infinity)
                 }
+                #else
+                TabView {
+                    photoGridView
+                        .tabItem {
+                            Label("Photos", systemImage: "photo.on.rectangle")
+                        }
+                    metadataTableView
+                        .tabItem {
+                            Label("Selected", systemImage: "list.bullet")
+                        }
+                }
+                #endif
             } else {
                 permissionView
             }
@@ -147,10 +180,19 @@ struct ContentView: View {
                 }
                 .disabled(selectedPhotoInfos.isEmpty)
                 
-                Button("View Labels in Browser") {
+                Button("View Labels") {
+                    #if os(macOS)
                     viewInBrowser()
+                    #else
+                    showingLabelView = true
+                    #endif
                 }
                 .disabled(selectedPhotoInfos.isEmpty)
+                #if os(iOS)
+                .sheet(isPresented: $showingLabelView) {
+                    LabelWebView(jsonDataProvider: buildExportJSONData)
+                }
+                #endif
             }
             .padding(.horizontal)
 
@@ -159,6 +201,7 @@ struct ContentView: View {
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                #if os(macOS)
                 Table(selectedPhotoInfos, sortOrder: $sortOrder) {
                     TableColumn("") { photoInfo in
                         Button {
@@ -220,6 +263,37 @@ struct ContentView: View {
                 .onChange(of: sortOrder) {
                     selectedPhotoInfos.sort(using: sortOrder)
                 }
+                #else
+                List(selectedPhotoInfos) { photoInfo in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
+                                .font(.headline)
+                            Spacer()
+                            Button {
+                                editingPhoto = photoInfo
+                            } label: {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 22))
+                            }
+                        }
+                        Text(photoInfo.dateTimeOriginal)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        if !photoInfo.location.isEmpty {
+                            Text(photoInfo.location)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        if !(photoNotes[photoInfo.photoID, default: ""].isEmpty) {
+                            Text(photoNotes[photoInfo.photoID, default: ""])
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                #endif
             }
         }
     }
@@ -368,8 +442,14 @@ struct ContentView: View {
                 return
             }
             
-            // Convert NSImage to CGImage for macOS
-            guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            // Convert platform image to CGImage
+            let cgImage: CGImage?
+            #if os(macOS)
+            cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            #else
+            cgImage = image.cgImage
+            #endif
+            guard let cgImage else {
                 DispatchQueue.main.async {
                     qrCodeResults[asset.localIdentifier] = ""
                 }
@@ -443,57 +523,55 @@ struct ContentView: View {
 
     private func copyJSONToClipboard() {
         guard let jsonString = buildExportJSON() else { return }
+        #if os(macOS)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(jsonString, forType: .string)
+        #elseif os(iOS)
+        UIPasteboard.general.string = jsonString
+        #endif
     }
 
     private func exportSelectedPhotosToJSON() {
-        let exportData = selectedPhotoInfos.map { info in
-            let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
-            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
-            let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
-            let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
-            let temperature = "\(info.temperatureC)/\(info.temperatureF)"
-            let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
-            let addressCodable = info.address?.mapValues { AnyCodable($0) }
-            return ExportPhotoInfo(
-                photoID: info.photoID,
-                dateTimeOriginal: info.dateTimeOriginal,
-                latitude: latitude,
-                longitude: longitude,
-                elevation: info.elevation,
-                qrCode: qrCode.isEmpty ? nil : qrCode,
-                temperature: temperature,
-                temperatureC: tempC,
-                temperatureF: tempF,
-                notes: photoNotes[info.photoID] ?? "",
-                collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
-                location: info.location,
-                address: addressCodable
-            )
-        }
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        do {
-            let data = try encoder.encode(exportData)
-            if var jsonString = String(data: data, encoding: .utf8) {
-                jsonString = jsonString.replacingOccurrences(of: "\\/", with: "/")
-
-                let panel = NSSavePanel()
-                panel.nameFieldStringValue = "photo_scan_metadata.json"
-                panel.allowedFileTypes = ["json"]
-                if panel.runModal() == .OK, let url = panel.url {
-                    try jsonString.write(to: url, atomically: true, encoding: .utf8)
-                    print("Exported to \(url.path)")
-                }
-
-            } else {
-                print("Failed to encode JSON as UTF-8 string.")
+        guard let jsonString = buildExportJSON() else { return }
+        
+        #if os(macOS)
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "photo_scan_metadata.json"
+        panel.allowedContentTypes = [.json]
+        if panel.runModal() == .OK, let url = panel.url {
+            do {
+                try jsonString.write(to: url, atomically: true, encoding: .utf8)
+                print("Exported to \(url.path)")
+            } catch {
+                print("Export failed: \(error)")
             }
+        }
+        #elseif os(iOS)
+        // Write to a temp file and present share sheet
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("photo_scan_metadata.json")
+        do {
+            try jsonString.write(to: tempURL, atomically: true, encoding: .utf8)
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = scene.windows.first,
+                  let rootVC = window.rootViewController else { return }
+            let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            if let popover = activityVC.popoverPresentationController {
+                popover.sourceView = window
+                popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+            }
+            rootVC.present(activityVC, animated: true)
         } catch {
             print("Export failed: \(error)")
         }
+        #endif
+    }
+
+    private func buildExportJSONData() -> Data {
+        guard let jsonString = buildExportJSON(),
+              let data = jsonString.data(using: .utf8) else {
+            return Data()
+        }
+        return data
     }
 
     private func updateDataHolder() {
@@ -503,13 +581,13 @@ struct ContentView: View {
         dataHolder.photoCollectors = photoCollectors
     }
 
+    #if os(macOS)
     private func startServerIfNeeded() {
         guard httpServer == nil else { return }
         
         print("ContentView: Starting HTTP server")
         updateDataHolder()
         
-        // Create a closure that generates fresh JSON data on each request
         let jsonDataProvider: () -> Data = { [dataHolder] in
             print("HTTPServer: Generating fresh JSON from current data")
             let exportData = dataHolder.photoInfos.map { info in
@@ -550,7 +628,6 @@ struct ContentView: View {
             }
         }
         
-        // Start the HTTP server
         let server = HTTPServer(port: 8000)
         self.httpServer = server
         
@@ -574,7 +651,6 @@ struct ContentView: View {
     private func viewInBrowser() {
         print("ContentView: viewInBrowser() called")
         
-        // Just open the browser - server is already running
         if isServerRunning {
             let url = URL(string: "http://localhost:8000")!
             NSWorkspace.shared.open(url)
@@ -582,4 +658,77 @@ struct ContentView: View {
             print("Server not running yet")
         }
     }
+    #endif
 }
+
+// MARK: - WKWebView-based Label Viewer (iOS)
+
+#if os(iOS)
+struct LabelWebView: View {
+    @Environment(\.dismiss) private var dismiss
+    let jsonDataProvider: () -> Data
+    
+    var body: some View {
+        NavigationStack {
+            LabelWebViewRepresentable(jsonDataProvider: jsonDataProvider)
+                .navigationTitle("Labels")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { dismiss() }
+                    }
+                }
+        }
+    }
+}
+
+struct LabelWebViewRepresentable: UIViewRepresentable {
+    let jsonDataProvider: () -> Data
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: config)
+        loadContent(into: webView)
+        return webView
+    }
+    
+    func updateUIView(_ webView: WKWebView, context: Context) {}
+    
+    private func loadContent(into webView: WKWebView) {
+        guard let htmlURL = Bundle.main.url(forResource: "index", withExtension: "html"),
+              var htmlString = try? String(contentsOf: htmlURL, encoding: .utf8) else {
+            return
+        }
+        
+        // Inline the CSS
+        if let cssURL = Bundle.main.url(forResource: "styles", withExtension: "css"),
+           let css = try? String(contentsOf: cssURL, encoding: .utf8) {
+            htmlString = htmlString.replacingOccurrences(
+                of: "<link rel=\"stylesheet\" href=\"styles.css\">",
+                with: "<style>\(css)</style>"
+            )
+        }
+        
+        // Inline the JS, replacing the fetch() call with embedded JSON data
+        if let jsURL = Bundle.main.url(forResource: "script", withExtension: "js"),
+           var js = try? String(contentsOf: jsURL, encoding: .utf8) {
+            let jsonData = jsonDataProvider()
+            let jsonString = String(data: jsonData, encoding: .utf8) ?? "[]"
+            
+            // Inject the JSON data directly and replace the fetch call
+            let inlineDataScript = "window.__specimensData = \(jsonString);\n"
+            js = js.replacingOccurrences(
+                of: "fetch('/specimens.json')",
+                with: "Promise.resolve({ json: () => Promise.resolve(window.__specimensData) })"
+            )
+            
+            htmlString = htmlString.replacingOccurrences(
+                of: "<script src=\"script.js\"></script>",
+                with: "<script>\(inlineDataScript)\(js)</script>"
+            )
+        }
+        
+        webView.loadHTMLString(htmlString, baseURL: nil)
+    }
+}
+#endif
