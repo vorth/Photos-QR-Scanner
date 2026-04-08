@@ -667,27 +667,76 @@ struct ContentView: View {
 struct LabelWebView: View {
     @Environment(\.dismiss) private var dismiss
     let jsonDataProvider: () -> Data
+    @State private var webView: WKWebView?
+    @State private var printStatus: String?
     
     var body: some View {
         NavigationStack {
-            LabelWebViewRepresentable(jsonDataProvider: jsonDataProvider)
-                .navigationTitle("Labels")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") { dismiss() }
+            ZStack(alignment: .bottom) {
+                LabelWebViewRepresentable(jsonDataProvider: jsonDataProvider, webViewRef: $webView)
+                if let status = printStatus {
+                    Text(status)
+                        .font(.footnote)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(8)
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut, value: printStatus)
+            .navigationTitle("Labels")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        printLabels()
+                    } label: {
+                        Image(systemName: "printer")
                     }
                 }
+            }
+        }
+    }
+    
+    private func printLabels() {
+        guard let webView else { return }
+        let printInfo = UIPrintInfo(dictionary: nil)
+        printInfo.jobName = "Specimen Labels"
+        printInfo.outputType = .general
+        let printController = UIPrintInteractionController.shared
+        printController.printInfo = printInfo
+        printController.printFormatter = webView.viewPrintFormatter()
+        printController.present(animated: true) { _, completed, error in
+            DispatchQueue.main.async {
+                if completed {
+                    printStatus = "Print job sent"
+                } else if let error {
+                    printStatus = "Print failed: \(error.localizedDescription)"
+                } else {
+                    printStatus = "Print cancelled"
+                }
+                // Auto-dismiss after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    printStatus = nil
+                }
+            }
         }
     }
 }
 
 struct LabelWebViewRepresentable: UIViewRepresentable {
     let jsonDataProvider: () -> Data
+    @Binding var webViewRef: WKWebView?
     
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         let webView = WKWebView(frame: .zero, configuration: config)
+        DispatchQueue.main.async { webViewRef = webView }
         loadContent(into: webView)
         return webView
     }
@@ -700,11 +749,11 @@ struct LabelWebViewRepresentable: UIViewRepresentable {
             return
         }
         
-        // Inline the CSS
+        // Inline the CSS (match the leading slash in href="/styles.css")
         if let cssURL = Bundle.main.url(forResource: "styles", withExtension: "css"),
            let css = try? String(contentsOf: cssURL, encoding: .utf8) {
             htmlString = htmlString.replacingOccurrences(
-                of: "<link rel=\"stylesheet\" href=\"styles.css\">",
+                of: "<link rel=\"stylesheet\" href=\"/styles.css\">",
                 with: "<style>\(css)</style>"
             )
         }
@@ -715,16 +764,16 @@ struct LabelWebViewRepresentable: UIViewRepresentable {
             let jsonData = jsonDataProvider()
             let jsonString = String(data: jsonData, encoding: .utf8) ?? "[]"
             
-            // Inject the JSON data directly and replace the fetch call
             let inlineDataScript = "window.__specimensData = \(jsonString);\n"
             js = js.replacingOccurrences(
                 of: "fetch('/specimens.json')",
-                with: "Promise.resolve({ json: () => Promise.resolve(window.__specimensData) })"
+                with: "Promise.resolve({ ok: true, json: () => Promise.resolve(window.__specimensData) })"
             )
             
+            // Match the actual script tag: <script type="module" src="/script.js">
             htmlString = htmlString.replacingOccurrences(
-                of: "<script src=\"script.js\"></script>",
-                with: "<script>\(inlineDataScript)\(js)</script>"
+                of: "<script type=\"module\" src=\"/script.js\"></script>",
+                with: "<script type=\"module\">\(inlineDataScript)\(js)</script>"
             )
         }
         
