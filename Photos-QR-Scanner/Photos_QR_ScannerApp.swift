@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 @main
 struct Photos_QR_ScannerApp: App {
@@ -13,8 +16,10 @@ struct Photos_QR_ScannerApp: App {
         // Initialize the collector preferences manager at app startup
         _ = CollectorPreferencesManager.shared
         
+        #if os(macOS)
         // Set custom app info for the About panel
         configureAboutPanel()
+        #endif
     }
     
     var body: some Scene {
@@ -22,6 +27,7 @@ struct Photos_QR_ScannerApp: App {
             ContentView()
                 .environmentObject(CollectorPreferencesManager.shared)
         }
+        #if os(macOS)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Photos QR Scanner") {
@@ -31,28 +37,25 @@ struct Photos_QR_ScannerApp: App {
                 }
             }
         }
+        #endif
     }
     
+    #if os(macOS)
     private func configureAboutPanel() {
-        // This sets the info for when the standard About panel is shown
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
     
     private func createAboutPanelOptions() -> [NSApplication.AboutPanelOptionKey: Any] {
         var options: [NSApplication.AboutPanelOptionKey: Any] = [:]
         
-        // App name
         if let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String {
             options[.applicationName] = appName
         }
         
-        // Version string combining version and build
         let version = BuildInfo.marketingVersion
-        let build = BuildInfo.buildNumber
         let commitShort = String(BuildInfo.gitCommitSHA.prefix(8))
         options[.applicationVersion] = "\(version)"
         
-        // Credits with commit info
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
@@ -61,14 +64,12 @@ struct Photos_QR_ScannerApp: App {
         
         let credits = NSMutableAttributedString(string: commitText + descriptionText)
         
-        // Style for commit line - match version string
         credits.addAttributes([
             .font: NSFont.systemFont(ofSize: 10),
             .foregroundColor: NSColor.labelColor,
             .paragraphStyle: paragraphStyle
         ], range: NSRange(location: 0, length: commitText.count))
         
-        // Style for description - original styling
         credits.addAttributes([
             .font: NSFont.systemFont(ofSize: 11),
             .foregroundColor: NSColor.labelColor,
@@ -79,4 +80,5 @@ struct Photos_QR_ScannerApp: App {
         
         return options
     }
+    #endif
 }

@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import Darwin
 
@@ -292,4 +293,5 @@ class HTTPServer: NSObject {
         stop()
     }
 }
+#endif
 
