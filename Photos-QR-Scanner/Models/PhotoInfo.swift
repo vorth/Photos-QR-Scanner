@@ -11,6 +11,7 @@ struct PhotoInfo: Identifiable {
     var temperatureF: String
     var notes: String = ""
     var collector: String = ""
+    var multiplicity: Int = 1
     var location: String = "Searching..."
     var address: [String: Any]?
     let asset: PHAsset

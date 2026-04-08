@@ -23,6 +23,7 @@ class PhotoDataHolder {
     var qrCodeResults: [String: String] = [:]
     var photoNotes: [String: String] = [:]
     var photoCollectors: [String: String] = [:]
+    var photoMultiplicities: [String: Int] = [:]
 }
 
 struct ContentView: View {
@@ -35,6 +36,7 @@ struct ContentView: View {
     @State private var thumbnailSize: Double = 100
     @State private var photoNotes: [String: String] = [:]
     @State private var photoCollectors: [String: String] = [:]
+    @State private var photoMultiplicities: [String: Int] = [:]
     @State private var manualQRCodes: [String: String] = [:]
     @State private var editingPhoto: PhotoInfo? = nil
     @State private var sortOrder: [KeyPathComparator<PhotoInfo>] = [KeyPathComparator(\.dateTimeOriginal, order: .forward)]
@@ -64,19 +66,22 @@ struct ContentView: View {
                     photoInfo: photoInfo,
                     qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
                     notes: photoNotes[photoInfo.photoID, default: ""],
-                    collector: photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector
+                    collector: photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector,
+                    multiplicity: photoMultiplicities[photoInfo.photoID, default: 1]
                 ) { editedInfo in
                     // Update the corresponding PhotoInfo in selectedPhotoInfos
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
                         selectedPhotoInfos[index].qrCode = editedInfo.qrCode
                         selectedPhotoInfos[index].notes = editedInfo.notes
                         selectedPhotoInfos[index].collector = editedInfo.collector
+                        selectedPhotoInfos[index].multiplicity = editedInfo.multiplicity
                     }
                     
                     // Update QR code result, notes, and collector immediately
                     qrCodeResults[photoInfo.photoID] = editedInfo.qrCode
                     photoNotes[photoInfo.photoID] = editedInfo.notes
                     photoCollectors[photoInfo.photoID] = editedInfo.collector
+                    photoMultiplicities[photoInfo.photoID] = editedInfo.multiplicity
                     
                     // Update data holder for server
                     updateDataHolder()
@@ -258,6 +263,12 @@ struct ContentView: View {
                         Text(photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector)
                             .font(.caption)
                     }
+
+                    TableColumn("Mult.") { photoInfo in
+                        Text("\(photoMultiplicities[photoInfo.photoID, default: 1])")
+                            .font(.caption)
+                    }
+                    .width(50)
                 }
                 .padding()
                 .onChange(of: sortOrder) {
@@ -287,6 +298,12 @@ struct ContentView: View {
                         }
                         if !(photoNotes[photoInfo.photoID, default: ""].isEmpty) {
                             Text(photoNotes[photoInfo.photoID, default: ""])
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        let mult = photoMultiplicities[photoInfo.photoID, default: 1]
+                        if mult > 1 {
+                            Text("Multiplicity: \(mult)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -358,6 +375,7 @@ struct ContentView: View {
             qrCodeResults.removeValue(forKey: id)
             photoNotes.removeValue(forKey: id)
             photoCollectors.removeValue(forKey: id)
+            photoMultiplicities.removeValue(forKey: id)
         } else {
             selectedIDs.insert(id)
             let photoInfo = PhotoInfo(asset: asset)
@@ -503,6 +521,7 @@ struct ContentView: View {
                 temperatureF: tempF,
                 notes: photoNotes[info.photoID] ?? "",
                 collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
+                multiplicity: photoMultiplicities[info.photoID] ?? 1,
                 location: info.location,
                 address: addressCodable
             )
@@ -579,6 +598,7 @@ struct ContentView: View {
         dataHolder.qrCodeResults = qrCodeResults
         dataHolder.photoNotes = photoNotes
         dataHolder.photoCollectors = photoCollectors
+        dataHolder.photoMultiplicities = photoMultiplicities
     }
 
     #if os(macOS)
@@ -611,6 +631,7 @@ struct ContentView: View {
                     temperatureF: tempF,
                     notes: dataHolder.photoNotes[info.photoID] ?? "",
                     collector: dataHolder.photoCollectors[info.photoID] ?? "",
+                    multiplicity: dataHolder.photoMultiplicities[info.photoID] ?? 1,
                     location: info.location,
                     address: addressCodable
                 )

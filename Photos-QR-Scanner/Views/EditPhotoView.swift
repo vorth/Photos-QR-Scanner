@@ -8,6 +8,7 @@ struct PhotoInfoEdit {
     var qrCode: String
     var notes: String
     var collector: String
+    var multiplicity: Int
 }
 
 struct EditPhotoView: View {
@@ -18,12 +19,13 @@ struct EditPhotoView: View {
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: PlatformImage?
     
-    init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, onSave: @escaping (PhotoInfoEdit) -> Void) {
+    init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, multiplicity: Int, onSave: @escaping (PhotoInfoEdit) -> Void) {
         self.photoInfo = photoInfo
         self._editedInfo = State(initialValue: PhotoInfoEdit(
             qrCode: qrCode,
             notes: notes,
-            collector: collector
+            collector: collector,
+            multiplicity: multiplicity
         ))
         self.onSave = onSave
     }
@@ -77,6 +79,16 @@ struct EditPhotoView: View {
                                     #endif
                                     .fixedSize()
                                 }
+                            }
+                        }
+                        
+                        VStack(alignment: .leading) {
+                            Text("Multiplicity")
+                                .font(.headline)
+                            Stepper(value: $editedInfo.multiplicity, in: 1...Int.max) {
+                                TextField("", value: $editedInfo.multiplicity, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 80)
                             }
                         }
                         
