@@ -1,6 +1,6 @@
 //
-//  Photos_QR_ScannerApp.swift
-//  Photos-QR-Scanner
+//  CheckrSpotApp.swift
+//  CheckrSpot
 //
 //  Created by Scott Vorthmann on 8/30/25.
 //
@@ -11,7 +11,7 @@ import AppKit
 #endif
 
 @main
-struct Photos_QR_ScannerApp: App {
+struct CheckrSpotApp: App {
     init() {
         // Initialize the collector preferences manager at app startup
         _ = CollectorPreferencesManager.shared
@@ -30,7 +30,7 @@ struct Photos_QR_ScannerApp: App {
         #if os(macOS)
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("About Photos QR Scanner") {
+                Button("About CheckrSpot") {
                     NSApplication.shared.orderFrontStandardAboutPanel(
                         options: createAboutPanelOptions()
                     )

@@ -1,13 +1,13 @@
 //
-//  Photos_QR_ScannerUITestsLaunchTests.swift
-//  Photos-QR-ScannerUITests
+//  CheckrSpotUITestsLaunchTests.swift
+//  CheckrSpotUITests
 //
 //  Created by Scott Vorthmann on 8/30/25.
 //
 
 import XCTest
 
-final class Photos_QR_ScannerUITestsLaunchTests: XCTestCase {
+final class CheckrSpotUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

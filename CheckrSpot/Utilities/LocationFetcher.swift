@@ -10,7 +10,7 @@ struct LocationFetcher {
         guard let url = URL(string: urlString) else { return }
         
         var request = URLRequest(url: url)
-        request.addValue("Photos-QR-Scanner", forHTTPHeaderField: "User-Agent")
+        request.addValue("CheckrSpot", forHTTPHeaderField: "User-Agent")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data,

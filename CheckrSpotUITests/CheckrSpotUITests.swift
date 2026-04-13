@@ -1,13 +1,13 @@
 //
-//  Photos_QR_ScannerUITests.swift
-//  Photos-QR-ScannerUITests
+//  CheckrSpotUITests.swift
+//  CheckrSpotUITests
 //
 //  Created by Scott Vorthmann on 8/30/25.
 //
 
 import XCTest
 
-final class Photos_QR_ScannerUITests: XCTestCase {
+final class CheckrSpotUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

@@ -15,7 +15,7 @@ A `PlatformImage` typealias was added in `ContentView.swift` (`NSImage` on macOS
 
 ## Files Modified
 
-### `Photos_QR_ScannerApp.swift`
+### `CheckrSpotApp.swift`
 
 Wrapped the About panel, `NSApplication` calls, and `.commands` modifier in `#if os(macOS)`.
 

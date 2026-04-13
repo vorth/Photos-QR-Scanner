@@ -1,4 +1,4 @@
-# Photos-QR-Scanner
+# CheckrSpot
 ## Features
 
 This macOS app captures and processes photo metadata, including:
