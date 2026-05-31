@@ -5,6 +5,7 @@ import CoreGraphics
 import CoreLocation
 import WebKit
 import UniformTypeIdentifiers
+import ImageIO
 #if os(macOS)
 import AppKit
 #elseif os(iOS)
@@ -27,6 +28,13 @@ class PhotoDataHolder {
 }
 
 struct ContentView: View {
+    #if os(iOS)
+    private enum BottomTab {
+        case photos
+        case selected
+    }
+    #endif
+
     @EnvironmentObject private var collectorManager: CollectorPreferencesManager
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
@@ -46,6 +54,13 @@ struct ContentView: View {
     #endif
     @State private var showingLabelView: Bool = false
     @State private var dataHolder = PhotoDataHolder()
+    #if os(iOS)
+    @State private var selectedBottomTab: BottomTab = .photos
+    @State private var showingCameraPicker: Bool = false
+    @State private var cameraSourceType: UIImagePickerController.SourceType = .camera
+    @State private var showingNoCameraAlert: Bool = false
+    @StateObject private var locationStatus = IOSLocationStatusMonitor()
+    #endif
     
     var body: some View {
         mainView
@@ -54,11 +69,18 @@ struct ContentView: View {
                 checkPermissions()
                 #if os(macOS)
                 startServerIfNeeded()
+                #elseif os(iOS)
+                locationStatus.startUpdating()
                 #endif
             }
             #if os(macOS)
             .onDisappear {
                 httpServer?.stop()
+            }
+            #endif
+            #if os(iOS)
+            .onDisappear {
+                locationStatus.stopUpdating()
             }
             #endif
             .sheet(item: $editingPhoto) { photoInfo in
@@ -92,6 +114,19 @@ struct ContentView: View {
                     }
                 }
             }
+            #if os(iOS)
+            .sheet(isPresented: $showingCameraPicker) {
+                CameraPickerRepresentable(sourceType: cameraSourceType) { image, metadata in
+                    saveCapturedImageToPhotoLibrary(image, metadata: metadata)
+                }
+                .ignoresSafeArea()
+            }
+            .alert("Camera Unavailable", isPresented: $showingNoCameraAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("This device does not have an available camera.")
+            }
+            #endif
     }
     
     private var mainView: some View {
@@ -105,15 +140,17 @@ struct ContentView: View {
                         .frame(minWidth: 350, idealWidth: 500, maxWidth: .infinity)
                 }
                 #else
-                TabView {
-                    photoGridView
-                        .tabItem {
-                            Label("Photos", systemImage: "photo.on.rectangle")
+                VStack(spacing: 0) {
+                    Group {
+                        switch selectedBottomTab {
+                        case .photos:
+                            photoGridView
+                        case .selected:
+                            metadataTableView
                         }
-                    metadataTableView
-                        .tabItem {
-                            Label("Selected", systemImage: "list.bullet")
-                        }
+                    }
+                    Divider()
+                    iOSBottomBar
                 }
                 #endif
             } else {
@@ -121,6 +158,41 @@ struct ContentView: View {
             }
         }
     }
+
+    #if os(iOS)
+    private var iOSBottomBar: some View {
+        HStack(spacing: 12) {
+            Picker("View", selection: $selectedBottomTab) {
+                Label("Photos", systemImage: "photo.on.rectangle")
+                    .tag(BottomTab.photos)
+                Label("Selected", systemImage: "list.bullet")
+                    .tag(BottomTab.selected)
+            }
+            .pickerStyle(.segmented)
+
+            Button {
+                presentCameraPicker()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "camera")
+                    Image(systemName: locationStatus.hasPreciseFix ? "location.fill" : "location.slash")
+                }
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(locationStatus.hasPreciseFix ? Color.green : Color.orange)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open camera")
+            .accessibilityHint(locationStatus.hasPreciseFix ? "Precise GPS location is available" : "Precise GPS location not available yet")
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+    }
+    #endif
     
     private var photoGridView: some View {
         VStack(alignment: .leading) {
@@ -601,6 +673,110 @@ struct ContentView: View {
         dataHolder.photoMultiplicities = photoMultiplicities
     }
 
+    #if os(iOS)
+    private func presentCameraPicker() {
+        locationStatus.requestLocationUpdate()
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            cameraSourceType = .camera
+            showingCameraPicker = true
+        } else {
+            showingNoCameraAlert = true
+        }
+    }
+
+    private func saveCapturedImageToPhotoLibrary(_ image: UIImage, metadata: [String: Any]) {
+        // UIImage-only saves drop EXIF/GPS, so re-encode with metadata and add GPS explicitly.
+        if let imageData = buildJPEGDataWithMetadata(for: image, baseMetadata: metadata) {
+            PHPhotoLibrary.shared().performChanges {
+                let request = PHAssetCreationRequest.forAsset()
+                request.addResource(with: .photo, data: imageData, options: nil)
+            } completionHandler: { success, error in
+                if let error {
+                    print("Failed to save captured photo with metadata: \(error.localizedDescription)")
+                }
+                if success {
+                    DispatchQueue.main.async {
+                        refreshRecentPhotosAfterCapture()
+                    }
+                }
+            }
+            return
+        }
+
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        } completionHandler: { success, error in
+            if let error {
+                print("Failed to save captured photo: \(error.localizedDescription)")
+            }
+            if success {
+                DispatchQueue.main.async {
+                    refreshRecentPhotosAfterCapture()
+                }
+            }
+        }
+    }
+
+    private func refreshRecentPhotosAfterCapture() {
+        // Photos indexing can lag briefly after capture, so refresh a few times.
+        loadRecentPhotos()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            loadRecentPhotos()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            loadRecentPhotos()
+        }
+    }
+
+    private func buildJPEGDataWithMetadata(for image: UIImage, baseMetadata: [String: Any]) -> Data? {
+        guard let cgImage = image.cgImage else {
+            return nil
+        }
+
+        var finalMetadata = baseMetadata
+        // Always remove incoming GPS tags and re-add only when app authorization allows it.
+        finalMetadata.removeValue(forKey: kCGImagePropertyGPSDictionary as String)
+        if locationStatus.canAttachGPS, let location = locationStatus.latestLocation {
+            finalMetadata[kCGImagePropertyGPSDictionary as String] = gpsMetadata(from: location)
+        }
+
+        let mutableData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(mutableData, UTType.jpeg.identifier as CFString, 1, nil) else {
+            return nil
+        }
+
+        CGImageDestinationAddImage(destination, cgImage, finalMetadata as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else {
+            return nil
+        }
+
+        return mutableData as Data
+    }
+
+    private func gpsMetadata(from location: CLLocation) -> [String: Any] {
+        let coordinate = location.coordinate
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "HH:mm:ss.SSSSSS"
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatter.dateFormat = "yyyy:MM:dd"
+
+        return [
+            kCGImagePropertyGPSLatitude as String: abs(coordinate.latitude),
+            kCGImagePropertyGPSLatitudeRef as String: coordinate.latitude >= 0 ? "N" : "S",
+            kCGImagePropertyGPSLongitude as String: abs(coordinate.longitude),
+            kCGImagePropertyGPSLongitudeRef as String: coordinate.longitude >= 0 ? "E" : "W",
+            kCGImagePropertyGPSAltitude as String: location.altitude,
+            kCGImagePropertyGPSAltitudeRef as String: location.altitude >= 0 ? 0 : 1,
+            kCGImagePropertyGPSTimeStamp as String: formatter.string(from: location.timestamp),
+            kCGImagePropertyGPSDateStamp as String: dateFormatter.string(from: location.timestamp),
+            kCGImagePropertyGPSDOP as String: max(location.horizontalAccuracy, 0)
+        ]
+    }
+    #endif
+
     #if os(macOS)
     private func startServerIfNeeded() {
         guard httpServer == nil else { return }
@@ -685,6 +861,127 @@ struct ContentView: View {
 // MARK: - WKWebView-based Label Viewer (iOS)
 
 #if os(iOS)
+final class IOSLocationStatusMonitor: NSObject, ObservableObject, CLLocationManagerDelegate {
+    @Published var hasPreciseFix: Bool = false
+    @Published var latestLocation: CLLocation?
+    @Published var canAttachGPS: Bool = false
+
+    private let manager = CLLocationManager()
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.distanceFilter = 10
+        manager.pausesLocationUpdatesAutomatically = true
+    }
+
+    func startUpdating() {
+        let status = manager.authorizationStatus
+        updateAuthorizationState(status)
+        switch status {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            manager.startUpdatingLocation()
+            manager.requestLocation()
+            updatePreciseState(using: manager.location)
+        default:
+            manager.stopUpdatingLocation()
+            latestLocation = nil
+            hasPreciseFix = false
+        }
+    }
+
+    func requestLocationUpdate() {
+        let status = manager.authorizationStatus
+        updateAuthorizationState(status)
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            manager.requestLocation()
+            updatePreciseState(using: manager.location)
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        default:
+            manager.stopUpdatingLocation()
+            latestLocation = nil
+            hasPreciseFix = false
+        }
+    }
+
+    func stopUpdating() {
+        manager.stopUpdatingLocation()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        startUpdating()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        updatePreciseState(using: locations.last)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        updatePreciseState(using: manager.location)
+    }
+
+    private func updatePreciseState(using location: CLLocation?) {
+        latestLocation = location ?? manager.location
+        let hasFullAccuracy = manager.accuracyAuthorization == .fullAccuracy
+        let horizontalAccuracy = latestLocation?.horizontalAccuracy ?? CLLocationAccuracy.greatestFiniteMagnitude
+        let hasAccurateFix = horizontalAccuracy > 0 && horizontalAccuracy <= 50
+        hasPreciseFix = hasFullAccuracy && hasAccurateFix
+    }
+
+    private func updateAuthorizationState(_ status: CLAuthorizationStatus) {
+        canAttachGPS = (status == .authorizedAlways || status == .authorizedWhenInUse)
+        if !canAttachGPS {
+            latestLocation = nil
+            hasPreciseFix = false
+        }
+    }
+}
+
+struct CameraPickerRepresentable: UIViewControllerRepresentable {
+    let sourceType: UIImagePickerController.SourceType
+    let onImagePicked: (UIImage, [String: Any]) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onImagePicked: onImagePicked)
+    }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = sourceType
+        picker.allowsEditing = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let onImagePicked: (UIImage, [String: Any]) -> Void
+
+        init(onImagePicked: @escaping (UIImage, [String: Any]) -> Void) {
+            self.onImagePicked = onImagePicked
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                let metadata = info[.mediaMetadata] as? [String: Any] ?? [:]
+                onImagePicked(image, metadata)
+            }
+            picker.dismiss(animated: true)
+        }
+    }
+}
+
 struct LabelWebView: View {
     @Environment(\.dismiss) private var dismiss
     let jsonDataProvider: () -> Data
