@@ -12,37 +12,37 @@
 			containerPortal = 6941D1C12E6395380030DEA4 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 6941D1C82E6395380030DEA4;
-			remoteInfo = "CheckrSpot";
+			remoteInfo = CheckrSpot;
 		};
 		6941D1E52E6395390030DEA4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6941D1C12E6395380030DEA4 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 6941D1C82E6395380030DEA4;
-			remoteInfo = "CheckrSpot";
+			remoteInfo = CheckrSpot;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		6941D1C92E6395380030DEA4 /* CheckrSpot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CheckrSpot.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6941D1DA2E6395390030DEA4 /* CheckrSpotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CheckrSpotTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6941D1E42E6395390030DEA4 /* CheckrSpotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CheckrSpotUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1C92E6395380030DEA4 /* CheckrSpot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CheckrSpot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1DA2E6395390030DEA4 /* CheckrSpotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CheckrSpotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6941D1E42E6395390030DEA4 /* CheckrSpotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CheckrSpotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6941D1CB2E6395380030DEA4 /* CheckrSpot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "CheckrSpot";
+			path = CheckrSpot;
 			sourceTree = "<group>";
 		};
 		6941D1DD2E6395390030DEA4 /* CheckrSpotTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "CheckrSpotTests";
+			path = CheckrSpotTests;
 			sourceTree = "<group>";
 		};
 		6941D1E72E6395390030DEA4 /* CheckrSpotUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "CheckrSpotUITests";
+			path = CheckrSpotUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -112,10 +112,10 @@
 			fileSystemSynchronizedGroups = (
 				6941D1CB2E6395380030DEA4 /* CheckrSpot */,
 			);
-			name = "CheckrSpot";
+			name = CheckrSpot;
 			packageProductDependencies = (
 			);
-			productName = "CheckrSpot";
+			productName = CheckrSpot;
 			productReference = 6941D1C92E6395380030DEA4 /* CheckrSpot.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -135,10 +135,10 @@
 			fileSystemSynchronizedGroups = (
 				6941D1DD2E6395390030DEA4 /* CheckrSpotTests */,
 			);
-			name = "CheckrSpotTests";
+			name = CheckrSpotTests;
 			packageProductDependencies = (
 			);
-			productName = "CheckrSpotTests";
+			productName = CheckrSpotTests;
 			productReference = 6941D1DA2E6395390030DEA4 /* CheckrSpotTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -158,10 +158,10 @@
 			fileSystemSynchronizedGroups = (
 				6941D1E72E6395390030DEA4 /* CheckrSpotUITests */,
 			);
-			name = "CheckrSpotUITests";
+			name = CheckrSpotUITests;
 			packageProductDependencies = (
 			);
-			productName = "CheckrSpotUITests";
+			productName = CheckrSpotUITests;
 			productReference = 6941D1E42E6395390030DEA4 /* CheckrSpotUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
@@ -444,7 +444,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = "CheckrSpot/CheckrSpot.entitlements";
+				CODE_SIGN_ENTITLEMENTS = CheckrSpot/CheckrSpot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -464,8 +464,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpot";
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -478,7 +478,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = "CheckrSpot/CheckrSpot.entitlements";
+				CODE_SIGN_ENTITLEMENTS = CheckrSpot/CheckrSpot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -498,8 +498,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpot";
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -515,7 +515,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpotTests";
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpotTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -532,7 +532,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpotTests";
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpotTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -547,11 +547,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpotUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpotUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "CheckrSpot";
+				TEST_TARGET_NAME = CheckrSpot;
 			};
 			name = Debug;
 		};
@@ -562,11 +562,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.vorthmann.CheckrSpotUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = org.vorthmann.CheckrSpotUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "CheckrSpot";
+				TEST_TARGET_NAME = CheckrSpot;
 			};
 			name = Release;
 		};
