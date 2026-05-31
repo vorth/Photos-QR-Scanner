@@ -93,10 +93,21 @@ struct ContentView: View {
                 ) { editedInfo in
                     // Update the corresponding PhotoInfo in selectedPhotoInfos
                     if let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoInfo.photoID }) {
+                        let previousLatLong = selectedPhotoInfos[index].latLong
                         selectedPhotoInfos[index].qrCode = editedInfo.qrCode
                         selectedPhotoInfos[index].notes = editedInfo.notes
                         selectedPhotoInfos[index].collector = editedInfo.collector
                         selectedPhotoInfos[index].multiplicity = editedInfo.multiplicity
+                        selectedPhotoInfos[index].latLong = editedInfo.latLong
+                        selectedPhotoInfos[index].location = editedInfo.location
+                        selectedPhotoInfos[index].address = editedInfo.address
+                        selectedPhotoInfos[index].temperatureC = editedInfo.temperatureC
+                        selectedPhotoInfos[index].temperatureF = editedInfo.temperatureF
+
+                        if editedInfo.latLong != previousLatLong,
+                           let coordinate = parseCoordinate(from: editedInfo.latLong) {
+                            refreshMetadataForEditedCoordinate(photoID: photoInfo.photoID, coordinate: coordinate)
+                        }
                     }
                     
                     // Update QR code result, notes, and collector immediately
@@ -612,6 +623,51 @@ struct ContentView: View {
             print("JSON encoding failed: \(error)")
         }
         return nil
+    }
+
+    private func parseCoordinate(from latLong: String) -> CLLocationCoordinate2D? {
+        let parts = latLong
+            .split(separator: ",", maxSplits: 1)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard parts.count == 2,
+              let latitude = Double(parts[0]),
+              let longitude = Double(parts[1]),
+              (-90.0...90.0).contains(latitude),
+              (-180.0...180.0).contains(longitude) else {
+            return nil
+        }
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    private func refreshMetadataForEditedCoordinate(photoID: String, coordinate: CLLocationCoordinate2D) {
+        LocationFetcher.fetchLocation(at: coordinate) { locationName, address in
+            if let idx = self.selectedPhotoInfos.firstIndex(where: { $0.photoID == photoID }) {
+                let firstPart = locationName.components(separatedBy: ",").first?.trimmingCharacters(in: .whitespaces) ?? locationName
+                let firstPartProcessed = firstPart.replacingOccurrences(of: "County", with: "Co.")
+                let iso3166 = address?["ISO3166-2-lvl4"] as? String ?? ""
+                let processedLocation = iso3166.isEmpty ? firstPartProcessed : "\(iso3166), \(firstPartProcessed)"
+
+                self.selectedPhotoInfos[idx].location = processedLocation
+                self.selectedPhotoInfos[idx].address = address
+                self.updateDataHolder()
+            }
+        }
+
+        guard let index = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoID }),
+              let creationDate = selectedPhotoInfos[index].asset.creationDate else {
+            return
+        }
+
+        WeatherFetcher.fetchHistoricTemp(at: coordinate, on: creationDate) { tempC in
+            DispatchQueue.main.async {
+                if let idx = selectedPhotoInfos.firstIndex(where: { $0.photoID == photoID }) {
+                    selectedPhotoInfos[idx].temperatureC = tempC != nil ? String(format: "%.0f°C", tempC!) : ""
+                    let f = tempC != nil ? tempC! * 9.0 / 5.0 + 32.0 : nil
+                    selectedPhotoInfos[idx].temperatureF = f != nil ? String(format: "%.0f°F", f!) : ""
+                    updateDataHolder()
+                }
+            }
+        }
     }
 
     private func copyJSONToClipboard() {

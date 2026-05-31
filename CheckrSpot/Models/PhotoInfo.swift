@@ -5,7 +5,7 @@ struct PhotoInfo: Identifiable {
     let id = UUID()
     let photoID: String
     let dateTimeOriginal: String
-    let latLong: String
+    var latLong: String
     var qrCode: String
     var temperatureC: String
     var temperatureF: String
