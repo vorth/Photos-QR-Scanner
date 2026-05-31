@@ -12,14 +12,14 @@ struct PhotoInfo: Identifiable {
     var notes: String = ""
     var collector: String = ""
     var multiplicity: Int = 1
-    var location: String = "Searching..."
+    var location: String = ""
     var address: [String: Any]?
     let asset: PHAsset
     
     var elevation: String {
         guard let address = address,
               let elevation = address["elevation"] as? String else {
-            return "N/A"
+            return ""
         }
         return elevation
     }
@@ -39,14 +39,14 @@ struct PhotoInfo: Identifiable {
             let lng = String(format: "%.5f", location.coordinate.longitude)
             self.latLong = "\(lat), \(lng)"
         } else {
-            self.latLong = "No location"
+            self.latLong = ""
         }
         
         // QR code will be detected asynchronously
         self.qrCode = "Scanning..."
 
         // Temperature data will be added asynchronously
-        self.temperatureC = "Searching..."
-        self.temperatureF = "Searching..."
+        self.temperatureC = ""
+        self.temperatureF = ""
     }
 }

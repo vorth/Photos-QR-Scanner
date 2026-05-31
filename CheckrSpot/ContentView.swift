@@ -489,10 +489,10 @@ struct ContentView: View {
                 DispatchQueue.main.async(execute: {
                     if let idx = selectedPhotoInfos.firstIndex(where: { $0.photoID == id }) {
                          selectedPhotoInfos[idx].temperatureC = tempC != nil ?
-                            String(format: "%.0f°C", tempC!) : "—"
+                                     String(format: "%.0f°C", tempC!) : ""
                          let f = tempC != nil ? tempC! * 9.0/5.0 + 32.0 : nil
                          selectedPhotoInfos[idx].temperatureF = f != nil ?
-                            String(format: "%.0f°F", f!) : "—"
+                                     String(format: "%.0f°F", f!) : ""
                         
                         print("Historic temperature for \(id):",
                               tempC.map { "\($0)°C" } ?? "unknown")
@@ -574,27 +574,29 @@ struct ContentView: View {
     private func buildExportJSON() -> String? {
         let exportData = selectedPhotoInfos.map { info in
             let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
-            let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+            let latitude = latLongParts.count == 2 ? String(latLongParts[0]) : nil
+            let longitude = latLongParts.count == 2 ? String(latLongParts[1]) : nil
             let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
             let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
-            let temperature = "\(info.temperatureC)/\(info.temperatureF)"
+            let temperature: String? = (tempC.isEmpty || tempF.isEmpty) ? nil : "\(tempC)/\(tempF)"
             let qrCode = qrCodeResults[info.photoID] ?? info.qrCode
             let addressCodable = info.address?.mapValues { AnyCodable($0) }
+            let elevation = info.elevation.trimmingCharacters(in: .whitespacesAndNewlines)
+            let location = info.location.trimmingCharacters(in: .whitespacesAndNewlines)
             return ExportPhotoInfo(
                 photoID: info.photoID,
                 dateTimeOriginal: info.dateTimeOriginal,
                 latitude: latitude,
                 longitude: longitude,
-                elevation: info.elevation,
+                elevation: elevation.isEmpty ? nil : elevation,
                 qrCode: qrCode.isEmpty ? nil : qrCode,
                 temperature: temperature,
-                temperatureC: tempC,
-                temperatureF: tempF,
+                temperatureC: tempC.isEmpty ? nil : tempC,
+                temperatureF: tempF.isEmpty ? nil : tempF,
                 notes: photoNotes[info.photoID] ?? "",
                 collector: photoCollectors[info.photoID] ?? collectorManager.lastCollector,
                 multiplicity: photoMultiplicities[info.photoID] ?? 1,
-                location: info.location,
+                location: location.isEmpty ? nil : location,
                 address: addressCodable
             )
         }
@@ -788,27 +790,29 @@ struct ContentView: View {
             print("HTTPServer: Generating fresh JSON from current data")
             let exportData = dataHolder.photoInfos.map { info in
                 let latLongParts = info.latLong.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                let latitude = latLongParts.count == 2 ? latLongParts[0] : ""
-                let longitude = latLongParts.count == 2 ? latLongParts[1] : ""
+                let latitude = latLongParts.count == 2 ? String(latLongParts[0]) : nil
+                let longitude = latLongParts.count == 2 ? String(latLongParts[1]) : nil
                 let tempC = info.temperatureC.replacingOccurrences(of: "°C", with: "").trimmingCharacters(in: .whitespaces)
                 let tempF = info.temperatureF.replacingOccurrences(of: "°F", with: "").trimmingCharacters(in: .whitespaces)
-                let temperature = "\(info.temperatureC)/\(info.temperatureF)"
+                let temperature: String? = (tempC.isEmpty || tempF.isEmpty) ? nil : "\(tempC)/\(tempF)"
                 let qrCode = dataHolder.qrCodeResults[info.photoID] ?? info.qrCode
                 let addressCodable = info.address?.mapValues { AnyCodable($0) }
+                let elevation = info.elevation.trimmingCharacters(in: .whitespacesAndNewlines)
+                let location = info.location.trimmingCharacters(in: .whitespacesAndNewlines)
                 return ExportPhotoInfo(
                     photoID: info.photoID,
                     dateTimeOriginal: info.dateTimeOriginal,
                     latitude: latitude,
                     longitude: longitude,
-                    elevation: info.elevation,
+                    elevation: elevation.isEmpty ? nil : elevation,
                     qrCode: qrCode.isEmpty ? nil : qrCode,
                     temperature: temperature,
-                    temperatureC: tempC,
-                    temperatureF: tempF,
+                    temperatureC: tempC.isEmpty ? nil : tempC,
+                    temperatureF: tempF.isEmpty ? nil : tempF,
                     notes: dataHolder.photoNotes[info.photoID] ?? "",
                     collector: dataHolder.photoCollectors[info.photoID] ?? "",
                     multiplicity: dataHolder.photoMultiplicities[info.photoID] ?? 1,
-                    location: info.location,
+                    location: location.isEmpty ? nil : location,
                     address: addressCodable
                 )
             }

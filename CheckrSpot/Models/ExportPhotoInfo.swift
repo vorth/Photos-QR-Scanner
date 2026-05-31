@@ -54,17 +54,17 @@ struct AnyCodable: Codable {
 struct ExportPhotoInfo: Codable {
     let photoID: String
     let dateTimeOriginal: String
-    let latitude: String
-    let longitude: String
-    let elevation: String
+    let latitude: String?
+    let longitude: String?
+    let elevation: String?
     let qrCode: String?
-    let temperature: String
-    let temperatureC: String
-    let temperatureF: String
+    let temperature: String?
+    let temperatureC: String?
+    let temperatureF: String?
     let notes: String
     let collector: String
     let multiplicity: Int
-    let location: String
+    let location: String?
     let address: [String: AnyCodable]?
     
     enum CodingKeys: String, CodingKey {
@@ -75,18 +75,32 @@ struct ExportPhotoInfo: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(photoID, forKey: .photoID)
         try container.encode(dateTimeOriginal, forKey: .dateTimeOriginal)
-        try container.encode(latitude, forKey: .latitude)
-        try container.encode(longitude, forKey: .longitude)
-        try container.encode(elevation, forKey: .elevation)
-        try container.encode(temperature, forKey: .temperature)
-        try container.encode(temperatureC, forKey: .temperatureC)
-        try container.encode(temperatureF, forKey: .temperatureF)
+        if let latitude, !latitude.isEmpty {
+            try container.encode(latitude, forKey: .latitude)
+        }
+        if let longitude, !longitude.isEmpty {
+            try container.encode(longitude, forKey: .longitude)
+        }
+        if let elevation, !elevation.isEmpty {
+            try container.encode(elevation, forKey: .elevation)
+        }
+        if let temperature, !temperature.isEmpty {
+            try container.encode(temperature, forKey: .temperature)
+        }
+        if let temperatureC, !temperatureC.isEmpty {
+            try container.encode(temperatureC, forKey: .temperatureC)
+        }
+        if let temperatureF, !temperatureF.isEmpty {
+            try container.encode(temperatureF, forKey: .temperatureF)
+        }
         try container.encode(notes, forKey: .notes)
         try container.encode(collector, forKey: .collector)
         if multiplicity > 1 {
             try container.encode(multiplicity, forKey: .multiplicity)
         }
-        try container.encode(location, forKey: .location)
+        if let location, !location.isEmpty {
+            try container.encode(location, forKey: .location)
+        }
         if let qrCode = qrCode, !qrCode.isEmpty {
             try container.encode(qrCode, forKey: .qrCode)
         }

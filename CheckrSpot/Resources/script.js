@@ -6,45 +6,54 @@ function transformData(data) {
     const labelOutput = document.getElementById('label-output');
     if (!labelOutput || !labelOutput.previousElementSibling) return;
 
+    const safeText = (value) => (value === undefined || value === null ? '' : String(value));
+
     // Clear out old labels
     labelOutput.innerHTML = '';
 
     const labels = data;
 
     const transformedData = labels.map((label) => {
-
-        // const gpsLatitude = label.latitude ? `${label.latitude}°N` : '';
-        // const gpsLongitude = label.longitude ? `${Math.abs(label.longitude)}°W` : '';
+        const location = safeText(label.location);
+        const latitude = safeText(label.latitude);
+        const longitude = safeText(label.longitude);
+        const dateTimeOriginal = safeText(label.dateTimeOriginal);
+        const temperature = safeText(label.temperature);
+        const elevation = safeText(label.address?.elevation);
+        const collector = safeText(label.collector);
+        const notes = safeText(label.notes);
+        const qrCode = safeText(label.qrCode);
+        const latLong = [latitude, longitude].filter(Boolean).join(', ');
+        const tempAndElevation = [temperature, elevation].filter(Boolean).join(', ');
 
         return `<div class="single-label">
             <div class="label-locality">
                 <span>
-                    ${label.location}
+                    ${location}
                 </span>
                 <span>
-                    ${label.latitude}
-                    ${label.longitude}
+                    ${latLong}
                 </span>
                 <span>
-                    ${label.dateTimeOriginal}
+                    ${dateTimeOriginal}
                 </span>
                 <span>
-                    ${label.temperature}, ${label.address?.elevation || ''}
+                    ${tempAndElevation}
                 </span>
                 <span>
-                    ${label.collector}
+                    ${collector}
                 </span>
             </div>`
-            + ( label.notes? `
+            + ( notes ? `
               <div class="label-notes">
                   <span>
-                      ${label.notes}
+                      ${notes}
                   </span>
               </div>` : '' )
-            + ( label.qrCode? `
+            + ( qrCode ? `
               <div class="label-taxonomy">
                   <span class="label-id">
-                      ${label.qrCode}
+                      ${qrCode}
                   </span>
               </div>` : '' )
         + `</div>`;
