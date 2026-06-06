@@ -63,6 +63,8 @@ struct ContentView: View {
             .sheet(item: $editingPhoto) { photoInfo in
                 EditPhotoView(
                     photoInfo: photoInfo,
+                    allSpecimens: selectedPhotoInfos,
+                    qrCodeResults: qrCodeResults,
                     qrCode: qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode,
                     notes: photoNotes[photoInfo.photoID, default: ""],
                     collector: photoCollectors[photoInfo.photoID] ?? collectorManager.lastCollector,

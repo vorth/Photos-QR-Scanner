@@ -3,6 +3,8 @@ import Photos
 import CoreLocation
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 struct PhotoInfoEdit {
@@ -21,6 +23,8 @@ struct EditPhotoView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var collectorManager: CollectorPreferencesManager
     let photoInfo: PhotoInfo
+    let allSpecimens: [PhotoInfo]
+    let qrCodeResults: [String: String]
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: PlatformImage?
@@ -33,8 +37,19 @@ struct EditPhotoView: View {
     @State private var displayedAddress: [String: Any]?
     @State private var displayedElevation: String
     
-    init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, multiplicity: Int, onSave: @escaping (PhotoInfoEdit) -> Void) {
+    init(
+        photoInfo: PhotoInfo,
+        allSpecimens: [PhotoInfo],
+        qrCodeResults: [String: String],
+        qrCode: String,
+        notes: String,
+        collector: String,
+        multiplicity: Int,
+        onSave: @escaping (PhotoInfoEdit) -> Void
+    ) {
         self.photoInfo = photoInfo
+        self.allSpecimens = allSpecimens
+        self.qrCodeResults = qrCodeResults
         let parsedCoordinate = Self.parseCoordinate(from: photoInfo.latLong)
         self._editedInfo = State(initialValue: PhotoInfoEdit(
             qrCode: qrCode,
@@ -58,8 +73,45 @@ struct EditPhotoView: View {
     }
     
     var body: some View {
-        HStack(spacing: 0) {
-            // Left side - Photo
+        Group {
+            #if os(iOS)
+            formView
+            #else
+            HStack(spacing: 0) {
+                photoPreviewView
+                formView
+                    .frame(width: 350)
+            }
+            #endif
+        }
+        #if os(macOS)
+        .frame(minWidth: 800, minHeight: 500)
+        #endif
+        .onAppear {
+            loadPreviewImage()
+        }
+    }
+
+    private var photoPreviewView: some View {
+        #if os(iOS)
+        ZStack {
+            photoBackground
+
+            if let image = previewImage {
+                platformImage(image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+            } else {
+                ProgressView()
+            }
+        }
+        .frame(width: iOSSquarePreviewSide, height: iOSSquarePreviewSide)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        #else
+        Group {
             if let image = previewImage {
                 platformImage(image)
                     .resizable()
@@ -73,127 +125,133 @@ struct EditPhotoView: View {
                     .padding(20)
                     .background(photoBackground)
             }
-            
-            // Right side - Form
-            ScrollView {
-                VStack(spacing: 20) {
-                    Group {
-                        VStack(alignment: .leading) {
-                            Text("QR Code")
-                                .font(.headline)
-                            TextField("Enter QR code", text: $editedInfo.qrCode)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        
-                        VStack(alignment: .leading) {
-                            Text("Collector")
-                                .font(.headline)
-                            HStack {
-                                TextField("Enter collector name", text: $editedInfo.collector)
-                                    .textFieldStyle(.roundedBorder)
-                                if !collectorManager.getAllCollectors().isEmpty {
-                                    Menu {
-                                        ForEach(collectorManager.getAllCollectors(), id: \.self) { collector in
-                                            Button(collector) {
-                                                editedInfo.collector = collector
-                                            }
-                                        }
-                                    } label: {
-                                        EmptyView()
-                                    }
-                                    #if os(macOS)
-                                    .menuStyle(.borderlessButton)
-                                    #endif
-                                    .fixedSize()
-                                }
-                            }
-                        }
-                        
-                        VStack(alignment: .leading) {
-                            Text("Multiplicity")
-                                .font(.headline)
-                            Stepper(value: $editedInfo.multiplicity, in: 1...Int.max) {
-                                TextField("", value: $editedInfo.multiplicity, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 80)
-                            }
-                        }
-                        
-                        VStack(alignment: .leading) {
-                            Text("Notes")
-                                .font(.headline)
-                            TextField("Notes", text: $editedInfo.notes)
-                                .textFieldStyle(.roundedBorder)
-                        }
+        }
+        #endif
+    }
 
+    #if os(iOS)
+    private var iOSSquarePreviewSide: CGFloat {
+        let horizontalPadding: CGFloat = 32 // Matches formView VStack padding.
+        return max(160, UIScreen.main.bounds.width - horizontalPadding)
+    }
+    #endif
+
+    private var formView: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                #if os(iOS)
+                photoPreviewView
+                #endif
+
+                Group {
+                    VStack(alignment: .leading) {
+                        Text("QR Code")
+                            .font(.headline)
+                        TextField("Enter QR code", text: $editedInfo.qrCode)
+                            .textFieldStyle(.roundedBorder)
                     }
-                    .frame(maxWidth: .infinity)
-                    
-                    Divider()
-                    
-                    Group {
-                        InfoRow(label: "Date/Time", value: photoInfo.dateTimeOriginal)
-                        HStack(spacing: 8) {
-                            Text("Lat/Long")
-                                .font(.headline)
-                                .frame(width: 100, alignment: .leading)
 
-                            Text(displayedLatLong)
-                                .font(.body)
-                                .textSelection(.enabled)
-
-                            Spacer(minLength: 0)
-
-                            #if os(iOS)
-                            Button {
-                                beginGPSEditing()
-                            } label: {
-                                Image(systemName: "pencil.circle.fill")
-                                    .font(.system(size: 20))
+                    VStack(alignment: .leading) {
+                        Text("Collector")
+                            .font(.headline)
+                        HStack {
+                            TextField("Enter collector name", text: $editedInfo.collector)
+                                .textFieldStyle(.roundedBorder)
+                            if !collectorManager.getAllCollectors().isEmpty {
+                                Menu {
+                                    ForEach(collectorManager.getAllCollectors(), id: \.self) { collector in
+                                        Button(collector) {
+                                            editedInfo.collector = collector
+                                        }
+                                    }
+                                } label: {
+                                    EmptyView()
+                                }
+                                #if os(macOS)
+                                .menuStyle(.borderlessButton)
+                                #endif
+                                .fixedSize()
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Edit GPS coordinates")
-                            #endif
                         }
-                        .frame(maxWidth: 400, alignment: .leading)
+                    }
+
+                    VStack(alignment: .leading) {
+                        Text("Multiplicity")
+                            .font(.headline)
+                        Stepper(value: $editedInfo.multiplicity, in: 1...Int.max) {
+                            TextField("", value: $editedInfo.multiplicity, format: .number)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 80)
+                        }
+                    }
+
+                    VStack(alignment: .leading) {
+                        Text("Notes")
+                            .font(.headline)
+                        TextField("Notes", text: $editedInfo.notes)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                }
+                .frame(maxWidth: .infinity)
+
+                Divider()
+
+                Group {
+                    InfoRow(label: "Date/Time", value: photoInfo.dateTimeOriginal)
+                    HStack(spacing: 8) {
+                        Text("Lat/Long")
+                            .font(.headline)
+                            .frame(width: 100, alignment: .leading)
+
+                        Text(displayedLatLong)
+                            .font(.body)
+                            .textSelection(.enabled)
+
+                        Spacer(minLength: 0)
 
                         #if os(iOS)
-                        if isEditingGPS {
-                            gpsEditorView
+                        Button {
+                            beginGPSEditing()
+                        } label: {
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.system(size: 20))
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Edit GPS coordinates")
                         #endif
+                    }
+                    .frame(maxWidth: 400, alignment: .leading)
 
-                        InfoRow(label: "Elevation", value: displayedElevation)
-                        InfoRow(label: "Location", value: displayedLocation)
-                        InfoRow(label: "Temperature", value: "\(displayedTemperatureC)/\(displayedTemperatureF)")
+                    #if os(iOS)
+                    if isEditingGPS {
+                        gpsEditorView
                     }
-                    
-                    Spacer()
-                    
-                    HStack {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                        .keyboardShortcut(.cancelAction)
-                        
-                        Button("Save") {
-                            onSave(editedInfo)
-                            dismiss()
-                        }
-                        .keyboardShortcut(.defaultAction)
-                    }
+                    #endif
+
+                    InfoRow(label: "Elevation", value: displayedElevation)
+                    InfoRow(label: "Location", value: displayedLocation)
+                    InfoRow(label: "Temperature", value: "\(displayedTemperatureC)/\(displayedTemperatureF)")
                 }
-                .padding()
+
+                Spacer()
+
+                HStack {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.cancelAction)
+
+                    Button("Save") {
+                        onSave(editedInfo)
+                        dismiss()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                }
             }
-            .frame(width: 350)
-            .background(formBackground)
+            .padding()
         }
-        #if os(macOS)
-        .frame(minWidth: 800, minHeight: 500)
-        #endif
-        .onAppear {
-            loadPreviewImage()
-        }
+        .background(formBackground)
     }
 
     #if os(iOS)
@@ -201,9 +259,10 @@ struct EditPhotoView: View {
         VStack(alignment: .leading, spacing: 10) {
             TapCoordinateMapView(
                 originalCoordinate: originalCoordinate,
-                selectedCoordinate: $selectedCoordinate
+                selectedCoordinate: $selectedCoordinate,
+                specimenPins: specimenPins
             )
-            .frame(height: 240)
+            .frame(height: 360)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -215,6 +274,8 @@ struct EditPhotoView: View {
                     .foregroundStyle(.red)
                 Label("New", systemImage: "circle.fill")
                     .foregroundStyle(.blue)
+                Label("Other Specimens", systemImage: "circle.fill")
+                    .foregroundStyle(.orange)
             }
             .font(.caption)
 
@@ -311,6 +372,46 @@ struct EditPhotoView: View {
     private func beginGPSEditing() {
         selectedCoordinate = Self.parseCoordinate(from: editedInfo.latLong)
         isEditingGPS = true
+    }
+
+    private var specimenPins: [SpecimenMapPin] {
+        allSpecimens
+            .filter { $0.photoID != photoInfo.photoID }
+            .compactMap { specimen in
+                guard let coordinate = Self.parseCoordinate(from: specimen.latLong) else {
+                    return nil
+                }
+
+                let qrRaw = qrCodeResults[specimen.photoID] ?? specimen.qrCode
+                let qrDisplay = qrRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "(no-qr)" : qrRaw
+                let timeDisplay = Self.timeLabel(from: specimen.dateTimeOriginal)
+
+                return SpecimenMapPin(
+                    coordinate: coordinate,
+                    qrCode: qrDisplay,
+                    time: timeDisplay
+                )
+            }
+    }
+
+    private static func timeLabel(from dateTimeOriginal: String) -> String {
+        let inFormatter = DateFormatter()
+        inFormatter.locale = Locale(identifier: "en_US_POSIX")
+        inFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+
+        if let date = inFormatter.date(from: dateTimeOriginal) {
+            let outFormatter = DateFormatter()
+            outFormatter.locale = Locale(identifier: "en_US_POSIX")
+            outFormatter.dateFormat = "HH:mm"
+            return outFormatter.string(from: date)
+        }
+
+        // Fallback for unexpected formats while keeping hh:mm output contract.
+        if let timePart = dateTimeOriginal.split(separator: " ").last {
+            return String(timePart.prefix(5))
+        }
+
+        return "--:--"
     }
 
     private func cancelGPSEditing() {

@@ -12,11 +12,11 @@ struct IOSBottomBarView: View {
     let onOpenCamera: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 10) {
             Picker("View", selection: $selectedBottomTab) {
                 Label("Photos", systemImage: "photo.on.rectangle")
                     .tag(BottomTab.photos)
-                Label("Selected", systemImage: "list.bullet")
+                Label("List", systemImage: "list.bullet")
                     .tag(BottomTab.selected)
             }
             .pickerStyle(.segmented)
@@ -24,14 +24,13 @@ struct IOSBottomBarView: View {
             Button {
                 onOpenCamera()
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "camera")
                     Image(systemName: hasPreciseLocationFix ? "location.fill" : "location.slash")
                 }
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, minHeight: 44)
                 .background(hasPreciseLocationFix ? Color.green : Color.orange)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
