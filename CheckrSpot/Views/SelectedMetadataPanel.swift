@@ -1,4 +1,5 @@
 import SwiftUI
+import Photos
 
 struct SelectedMetadataPanel: View {
     @EnvironmentObject private var collectorManager: CollectorPreferencesManager
@@ -125,36 +126,40 @@ struct SelectedMetadataPanel: View {
                 }
                 #else
                 List(selectedPhotoInfos) { photoInfo in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
-                                .font(.headline)
-                            Spacer()
-                            Button {
-                                onEditPhoto(photoInfo)
-                            } label: {
-                                Image(systemName: "pencil.circle.fill")
-                                    .font(.system(size: 22))
+                    HStack(alignment: .top, spacing: 10) {
+                        SelectedPhotoRowThumbnail(asset: photoInfo.asset, size: 67)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(qrCodeResults[photoInfo.photoID] ?? photoInfo.qrCode)
+                                    .font(.headline)
+                                Spacer()
+                                Button {
+                                    onEditPhoto(photoInfo)
+                                } label: {
+                                    Image(systemName: "pencil.circle.fill")
+                                        .font(.system(size: 22))
+                                }
                             }
-                        }
-                        Text(photoInfo.dateTimeOriginal)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        if !photoInfo.location.isEmpty {
-                            Text(photoInfo.location)
+                            Text(photoInfo.dateTimeOriginal)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                        }
-                        if !(photoNotes[photoInfo.photoID, default: ""].isEmpty) {
-                            Text(photoNotes[photoInfo.photoID, default: ""])
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        let mult = photoMultiplicities[photoInfo.photoID, default: 1]
-                        if mult > 1 {
-                            Text("Multiplicity: \(mult)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            if !photoInfo.location.isEmpty {
+                                Text(photoInfo.location)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            if !(photoNotes[photoInfo.photoID, default: ""].isEmpty) {
+                                Text(photoNotes[photoInfo.photoID, default: ""])
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            let mult = photoMultiplicities[photoInfo.photoID, default: 1]
+                            if mult > 1 {
+                                Text("Multiplicity: \(mult)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     .padding(.vertical, 2)
@@ -164,3 +169,59 @@ struct SelectedMetadataPanel: View {
         }
     }
 }
+
+#if os(iOS)
+private struct SelectedPhotoRowThumbnail: View {
+    let asset: PHAsset
+    let size: CGFloat
+
+    @State private var thumbnail: UIImage?
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.gray.opacity(0.12))
+
+            if let thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+        )
+        .onAppear {
+            loadThumbnail()
+        }
+    }
+
+    private func loadThumbnail() {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.resizeMode = .exact
+        options.isNetworkAccessAllowed = false
+
+        let scale = UIScreen.main.scale
+        let targetSize = CGSize(width: size * scale, height: size * scale)
+
+        manager.requestImage(
+            for: asset,
+            targetSize: targetSize,
+            contentMode: .aspectFill,
+            options: options
+        ) { image, _ in
+            DispatchQueue.main.async {
+                thumbnail = image
+            }
+        }
+    }
+}
+#endif
