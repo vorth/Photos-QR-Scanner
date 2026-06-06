@@ -21,6 +21,8 @@ struct EditPhotoView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var collectorManager: CollectorPreferencesManager
     let photoInfo: PhotoInfo
+    let allSpecimens: [PhotoInfo]
+    let qrCodeResults: [String: String]
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: PlatformImage?
@@ -33,8 +35,19 @@ struct EditPhotoView: View {
     @State private var displayedAddress: [String: Any]?
     @State private var displayedElevation: String
     
-    init(photoInfo: PhotoInfo, qrCode: String, notes: String, collector: String, multiplicity: Int, onSave: @escaping (PhotoInfoEdit) -> Void) {
+    init(
+        photoInfo: PhotoInfo,
+        allSpecimens: [PhotoInfo],
+        qrCodeResults: [String: String],
+        qrCode: String,
+        notes: String,
+        collector: String,
+        multiplicity: Int,
+        onSave: @escaping (PhotoInfoEdit) -> Void
+    ) {
         self.photoInfo = photoInfo
+        self.allSpecimens = allSpecimens
+        self.qrCodeResults = qrCodeResults
         let parsedCoordinate = Self.parseCoordinate(from: photoInfo.latLong)
         self._editedInfo = State(initialValue: PhotoInfoEdit(
             qrCode: qrCode,
@@ -201,9 +214,10 @@ struct EditPhotoView: View {
         VStack(alignment: .leading, spacing: 10) {
             TapCoordinateMapView(
                 originalCoordinate: originalCoordinate,
-                selectedCoordinate: $selectedCoordinate
+                selectedCoordinate: $selectedCoordinate,
+                specimenPins: specimenPins
             )
-            .frame(height: 240)
+            .frame(height: 360)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -215,6 +229,8 @@ struct EditPhotoView: View {
                     .foregroundStyle(.red)
                 Label("New", systemImage: "circle.fill")
                     .foregroundStyle(.blue)
+                Label("Other Specimens", systemImage: "circle.fill")
+                    .foregroundStyle(.orange)
             }
             .font(.caption)
 
@@ -311,6 +327,46 @@ struct EditPhotoView: View {
     private func beginGPSEditing() {
         selectedCoordinate = Self.parseCoordinate(from: editedInfo.latLong)
         isEditingGPS = true
+    }
+
+    private var specimenPins: [SpecimenMapPin] {
+        allSpecimens
+            .filter { $0.photoID != photoInfo.photoID }
+            .compactMap { specimen in
+                guard let coordinate = Self.parseCoordinate(from: specimen.latLong) else {
+                    return nil
+                }
+
+                let qrRaw = qrCodeResults[specimen.photoID] ?? specimen.qrCode
+                let qrDisplay = qrRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "(no-qr)" : qrRaw
+                let timeDisplay = Self.timeLabel(from: specimen.dateTimeOriginal)
+
+                return SpecimenMapPin(
+                    coordinate: coordinate,
+                    qrCode: qrDisplay,
+                    time: timeDisplay
+                )
+            }
+    }
+
+    private static func timeLabel(from dateTimeOriginal: String) -> String {
+        let inFormatter = DateFormatter()
+        inFormatter.locale = Locale(identifier: "en_US_POSIX")
+        inFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+
+        if let date = inFormatter.date(from: dateTimeOriginal) {
+            let outFormatter = DateFormatter()
+            outFormatter.locale = Locale(identifier: "en_US_POSIX")
+            outFormatter.dateFormat = "HH:mm"
+            return outFormatter.string(from: date)
+        }
+
+        // Fallback for unexpected formats while keeping hh:mm output contract.
+        if let timePart = dateTimeOriginal.split(separator: " ").last {
+            return String(timePart.prefix(5))
+        }
+
+        return "--:--"
     }
 
     private func cancelGPSEditing() {
