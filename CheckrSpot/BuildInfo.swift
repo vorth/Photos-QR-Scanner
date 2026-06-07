@@ -9,7 +9,7 @@
 import Foundation
 
 struct BuildInfo {
-    static let gitCommitSHA: String = "fbd5f6fa5e8a280fde4e78644bde36b834e7f4c5"
-    static let buildNumber: String = "71"
-    static let marketingVersion: String = "1.0.1"
+    static let gitCommitSHA: String = "a19317e13630279177fc51fbf6254fa71364219b"
+    static let buildNumber: String = "73"
+    static let marketingVersion: String = "1.0.2"
 }
