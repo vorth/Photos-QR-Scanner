@@ -27,6 +27,7 @@ struct EditPhotoView: View {
     let qrCodeResults: [String: String]
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
+    let onDeselect: () -> Void
     @State private var previewImage: PlatformImage?
     @State private var downloadProgress: Double = 0
     @State private var previewLoadFailed: Bool = false
@@ -47,7 +48,8 @@ struct EditPhotoView: View {
         notes: String,
         collector: String,
         multiplicity: Int,
-        onSave: @escaping (PhotoInfoEdit) -> Void
+        onSave: @escaping (PhotoInfoEdit) -> Void,
+        onDeselect: @escaping () -> Void
     ) {
         self.photoInfo = photoInfo
         self.allSpecimens = allSpecimens
@@ -72,6 +74,7 @@ struct EditPhotoView: View {
         self._displayedAddress = State(initialValue: photoInfo.address)
         self._displayedElevation = State(initialValue: photoInfo.elevation)
         self.onSave = onSave
+        self.onDeselect = onDeselect
     }
     
     var body: some View {
@@ -80,7 +83,11 @@ struct EditPhotoView: View {
             formView
             #else
             HStack(spacing: 0) {
-                photoPreviewView
+                VStack(spacing: 12) {
+                    photoPreviewView
+                    deselectButton
+                        .padding(.bottom, 20)
+                }
                 formView
                     .frame(width: 350)
             }
@@ -170,11 +177,27 @@ struct EditPhotoView: View {
     }
     #endif
 
+    /// Removes this photo from the selection. Placed directly under the image so
+    /// the decision can be made while looking at the photo and its map location.
+    private var deselectButton: some View {
+        Button(role: .destructive) {
+            onDeselect()
+            dismiss()
+        } label: {
+            Text("Deselect")
+                .font(.subheadline)
+        }
+        .buttonStyle(.bordered)
+        .tint(.red)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
     private var formView: some View {
         ScrollView {
             VStack(spacing: 20) {
                 #if os(iOS)
                 photoPreviewView
+                deselectButton
                 #endif
 
                 Group {

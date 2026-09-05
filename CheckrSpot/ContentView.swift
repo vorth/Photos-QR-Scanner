@@ -103,6 +103,8 @@ struct ContentView: View {
                     if !editedInfo.collector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         collectorManager.addCollector(editedInfo.collector)
                     }
+                } onDeselect: {
+                    deselectPhoto(photoInfo.photoID)
                 }
             }
             #if os(iOS)
@@ -254,15 +256,7 @@ struct ContentView: View {
         let id = asset.localIdentifier
         
         if selectedIDs.contains(id) {
-            selectedIDs.remove(id)
-            if lastSelectedID == id {
-                lastSelectedID = nil
-            }
-            selectedPhotoInfos.removeAll { $0.photoID == id }
-            qrCodeResults.removeValue(forKey: id)
-            photoNotes.removeValue(forKey: id)
-            photoCollectors.removeValue(forKey: id)
-            photoMultiplicities.removeValue(forKey: id)
+            deselectPhoto(id)
         } else {
             selectedIDs.insert(id)
             lastSelectedID = id
@@ -320,12 +314,18 @@ struct ContentView: View {
         }
     }
     
+    /// Single path for dropping a photo from the selection, used by both the
+    /// grid's toggle and the Deselect button in the edit sheet.
     private func deselectPhoto(_ photoID: String) {
         selectedIDs.remove(photoID)
+        if lastSelectedID == photoID {
+            lastSelectedID = nil
+        }
         selectedPhotoInfos.removeAll { $0.photoID == photoID }
         qrCodeResults.removeValue(forKey: photoID)
         photoNotes.removeValue(forKey: photoID)
         photoCollectors.removeValue(forKey: photoID)
+        photoMultiplicities.removeValue(forKey: photoID)
         updateDataHolder()
     }
     
