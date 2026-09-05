@@ -333,14 +333,23 @@ struct ContentView: View {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
-        options.isNetworkAccessAllowed = false
+        // Photos that have been offloaded by iCloud "Optimize Storage" only
+        // have a low-resolution thumbnail on device, which is never sharp
+        // enough to decode a QR code. Allow the original to be downloaded.
+        options.isNetworkAccessAllowed = true
         
         manager.requestImage(
             for: asset,
             targetSize: CGSize(width: 1024, height: 1024),
             contentMode: .aspectFit,
             options: options
-        ) { image, _ in
+        ) { image, info in
+            // A high-quality request calls back more than once: a degraded
+            // placeholder first, then the real image. Ignore the placeholder so
+            // a blurry thumbnail cannot produce (or overwrite) a QR result.
+            let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+            if isDegraded { return }
+
             guard let image = image else {
                 DispatchQueue.main.async {
                     qrCodeResults[asset.localIdentifier] = ""

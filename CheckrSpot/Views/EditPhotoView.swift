@@ -28,6 +28,8 @@ struct EditPhotoView: View {
     @State private var editedInfo: PhotoInfoEdit
     let onSave: (PhotoInfoEdit) -> Void
     @State private var previewImage: PlatformImage?
+    @State private var downloadProgress: Double = 0
+    @State private var previewLoadFailed: Bool = false
     @State private var originalCoordinate: CLLocationCoordinate2D?
     @State private var selectedCoordinate: CLLocationCoordinate2D?
     @State private var isEditingGPS: Bool = false
@@ -104,7 +106,7 @@ struct EditPhotoView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
             } else {
-                ProgressView()
+                previewPlaceholder
             }
         }
         .frame(width: iOSSquarePreviewSide, height: iOSSquarePreviewSide)
@@ -120,13 +122,45 @@ struct EditPhotoView: View {
                     .padding(20)
                     .background(photoBackground)
             } else {
-                ProgressView()
+                previewPlaceholder
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(20)
                     .background(photoBackground)
             }
         }
         #endif
+    }
+
+    /// Shown until the full-size image arrives. An offloaded iCloud photo can
+    /// take a while to download, so report progress rather than spinning
+    /// indefinitely, and say so plainly when it cannot be fetched at all.
+    @ViewBuilder
+    private var previewPlaceholder: some View {
+        if previewLoadFailed {
+            VStack(spacing: 8) {
+                Image(systemName: "icloud.slash")
+                    .font(.title2)
+                Text("Photo unavailable")
+                    .font(.caption)
+                Text("It could not be downloaded from iCloud.")
+                    .font(.caption2)
+                    .multilineTextAlignment(.center)
+            }
+            .foregroundStyle(.secondary)
+            .padding()
+        } else if downloadProgress > 0, downloadProgress < 1 {
+            VStack(spacing: 8) {
+                ProgressView(value: downloadProgress)
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: 160)
+                Text("Downloading from iCloud…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+        } else {
+            ProgressView()
+        }
     }
 
     #if os(iOS)
@@ -330,17 +364,40 @@ struct EditPhotoView: View {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
-        options.isNetworkAccessAllowed = false
-        
+        // Photos offloaded by iCloud "Optimize Storage" are not on the device
+        // and must be fetched, otherwise the preview never appears at all.
+        options.isNetworkAccessAllowed = true
+        options.progressHandler = { progress, error, _, _ in
+            DispatchQueue.main.async {
+                self.downloadProgress = progress
+                if error != nil {
+                    self.previewLoadFailed = true
+                }
+            }
+        }
+
         manager.requestImage(
             for: photoInfo.asset,
             targetSize: CGSize(width: 2048, height: 2048),
             contentMode: .aspectFit,
             options: options
-        ) { image, _ in
-            if let image = image {
-                DispatchQueue.main.async {
+        ) { image, info in
+            // Show the degraded placeholder immediately if one is available, so
+            // the user sees something while the original downloads, but keep
+            // waiting for the full-quality callback that follows it.
+            let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+
+            DispatchQueue.main.async {
+                if let image = image {
                     self.previewImage = image
+                    if !isDegraded {
+                        self.previewLoadFailed = false
+                        self.downloadProgress = 1
+                    }
+                } else if !isDegraded {
+                    // No image and this is the final callback: the original is
+                    // unavailable (offline, or the download failed).
+                    self.previewLoadFailed = true
                 }
             }
         }
