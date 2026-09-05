@@ -41,7 +41,7 @@ struct TapCoordinateMapView: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: TapCoordinateMapView
         private var lastAnnotationSignature: String?
-        private var lastMapSignature: String?
+        private var hasPerformedInitialFit = false
 
         init(parent: TapCoordinateMapView) {
             self.parent = parent
@@ -102,17 +102,15 @@ struct TapCoordinateMapView: UIViewRepresentable {
             return chunks.sorted().joined(separator: "|")
         }
 
+        /// Frames all pins once, when the map first shows them. Afterwards the
+        /// region belongs to the user: adding or moving a pin must never move
+        /// the camera out from under them.
         func fitMapToAllPinsIfNeeded(on mapView: MKMapView) {
             let coordinates: [CLLocationCoordinate2D] = mapView.annotations.map(\.coordinate)
             guard !coordinates.isEmpty else { return }
 
-            let signature = coordinates
-                .map { String(format: "%.5f,%.5f", $0.latitude, $0.longitude) }
-                .sorted()
-                .joined(separator: "|")
-
-            guard signature != lastMapSignature else { return }
-            lastMapSignature = signature
+            guard !hasPerformedInitialFit else { return }
+            hasPerformedInitialFit = true
 
             if coordinates.count == 1, let coordinate = coordinates.first {
                 let region = MKCoordinateRegion(
@@ -138,6 +136,18 @@ struct TapCoordinateMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if let cluster = annotation as? MKClusterAnnotation {
+                let reuseIdentifier = "SpecimenClusterPin"
+                let view = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) as? MKMarkerAnnotationView
+                    ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
+                view.annotation = annotation
+                view.markerTintColor = .systemOrange
+                view.glyphText = "\(cluster.memberAnnotations.count)"
+                view.canShowCallout = false
+                view.displayPriority = .required
+                return view
+            }
+
             guard let pin = annotation as? PinAnnotation else { return nil }
             switch pin.kind {
             case .original, .selected:
@@ -148,13 +158,21 @@ struct TapCoordinateMapView: UIViewRepresentable {
                 view.annotation = annotation
                 view.canShowCallout = false
 
+                // O and N usually sit on the exact same coordinate until the
+                // user moves N. Rank them explicitly so N always wins the
+                // collision and draws on top, rather than the winner being
+                // whichever MapKit happened to lay out last.
                 switch pin.kind {
                 case .original:
                     view.markerTintColor = .systemRed
                     view.glyphText = "O"
+                    view.displayPriority = .defaultHigh
+                    view.zPriority = .defaultUnselected
                 case .selected:
                     view.markerTintColor = .systemBlue
                     view.glyphText = "N"
+                    view.displayPriority = .required
+                    view.zPriority = .max
                 case .specimen:
                     break
                 }
@@ -167,6 +185,7 @@ struct TapCoordinateMapView: UIViewRepresentable {
                 view.annotation = annotation
                 view.markerTintColor = .systemOrange
                 view.glyphText = ""
+                view.clusteringIdentifier = "specimen"
                 view.canShowCallout = true
                 view.titleVisibility = .visible
                 view.subtitleVisibility = .visible

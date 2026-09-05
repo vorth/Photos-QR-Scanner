@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
     @State private var selectedIDs: Set<String> = []
+    @State private var lastSelectedID: String? = nil
     @State private var selectedPhotoInfos: [PhotoInfo] = []
     @State private var qrCodeResults: [String: String] = [:]
     @State private var thumbnailSize: Double = 100
@@ -102,6 +103,8 @@ struct ContentView: View {
                     if !editedInfo.collector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         collectorManager.addCollector(editedInfo.collector)
                     }
+                } onDeselect: {
+                    deselectPhoto(photoInfo.photoID)
                 }
             }
             #if os(iOS)
@@ -129,6 +132,7 @@ struct ContentView: View {
                         selectedIDs: selectedIDs,
                         thumbnailSize: $thumbnailSize,
                         qrCodeResults: qrCodeResults,
+                        scrollTargetPhotoID: scrollTargetPhotoID,
                         onToggleSelection: toggleSelection,
                         onEditSelectedPhoto: beginEditingPhoto
                     )
@@ -158,6 +162,7 @@ struct ContentView: View {
                                 selectedIDs: selectedIDs,
                                 thumbnailSize: $thumbnailSize,
                                 qrCodeResults: qrCodeResults,
+                                scrollTargetPhotoID: scrollTargetPhotoID,
                                 onToggleSelection: toggleSelection,
                                 onEditSelectedPhoto: beginEditingPhoto
                             )
@@ -191,6 +196,19 @@ struct ContentView: View {
                 PhotosPermissionView(onRequestAccess: requestAccess)
             }
         }
+    }
+
+    /// The photo the grid should scroll to when it appears. Prefers the most
+    /// recently selected photo; if there isn't one still selected (fresh launch,
+    /// or it was deselected) falls back to the selected photo with the latest
+    /// timestamp. `allPhotos` is newest-first, so that's the first selected
+    /// asset in the array. Nil when nothing is selected, leaving the grid at the
+    /// top showing the newest photos.
+    private var scrollTargetPhotoID: String? {
+        if let lastSelectedID, selectedIDs.contains(lastSelectedID) {
+            return lastSelectedID
+        }
+        return allPhotos.first { selectedIDs.contains($0.localIdentifier) }?.localIdentifier
     }
 
     private func beginEditingPhoto(asset: PHAsset) {
@@ -238,14 +256,10 @@ struct ContentView: View {
         let id = asset.localIdentifier
         
         if selectedIDs.contains(id) {
-            selectedIDs.remove(id)
-            selectedPhotoInfos.removeAll { $0.photoID == id }
-            qrCodeResults.removeValue(forKey: id)
-            photoNotes.removeValue(forKey: id)
-            photoCollectors.removeValue(forKey: id)
-            photoMultiplicities.removeValue(forKey: id)
+            deselectPhoto(id)
         } else {
             selectedIDs.insert(id)
+            lastSelectedID = id
             let photoInfo = PhotoInfo(asset: asset)
             selectedPhotoInfos.append(photoInfo)
             selectedPhotoInfos.sort(using: sortOrder)
@@ -300,12 +314,18 @@ struct ContentView: View {
         }
     }
     
+    /// Single path for dropping a photo from the selection, used by both the
+    /// grid's toggle and the Deselect button in the edit sheet.
     private func deselectPhoto(_ photoID: String) {
         selectedIDs.remove(photoID)
+        if lastSelectedID == photoID {
+            lastSelectedID = nil
+        }
         selectedPhotoInfos.removeAll { $0.photoID == photoID }
         qrCodeResults.removeValue(forKey: photoID)
         photoNotes.removeValue(forKey: photoID)
         photoCollectors.removeValue(forKey: photoID)
+        photoMultiplicities.removeValue(forKey: photoID)
         updateDataHolder()
     }
     
@@ -313,14 +333,23 @@ struct ContentView: View {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
-        options.isNetworkAccessAllowed = false
+        // Photos that have been offloaded by iCloud "Optimize Storage" only
+        // have a low-resolution thumbnail on device, which is never sharp
+        // enough to decode a QR code. Allow the original to be downloaded.
+        options.isNetworkAccessAllowed = true
         
         manager.requestImage(
             for: asset,
             targetSize: CGSize(width: 1024, height: 1024),
             contentMode: .aspectFit,
             options: options
-        ) { image, _ in
+        ) { image, info in
+            // A high-quality request calls back more than once: a degraded
+            // placeholder first, then the real image. Ignore the placeholder so
+            // a blurry thumbnail cannot produce (or overwrite) a QR result.
+            let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+            if isDegraded { return }
+
             guard let image = image else {
                 DispatchQueue.main.async {
                     qrCodeResults[asset.localIdentifier] = ""
