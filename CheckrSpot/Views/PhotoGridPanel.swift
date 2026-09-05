@@ -6,6 +6,10 @@ struct PhotoGridPanel: View {
     let selectedIDs: Set<String>
     @Binding var thumbnailSize: Double
     let qrCodeResults: [String: String]
+    /// Photo to bring into view when the grid appears. The grid is rebuilt from
+    /// scratch every time the user returns from another tab, so without this it
+    /// would always restart at the top on the newest photos.
+    let scrollTargetPhotoID: String?
     let onToggleSelection: (PHAsset) -> Void
     let onEditSelectedPhoto: (PHAsset) -> Void
 
@@ -27,30 +31,47 @@ struct PhotoGridPanel: View {
             }
             .padding()
 
-            ScrollView {
-                LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: thumbnailSize), spacing: 6)
-                ], spacing: 6) {
-                    ForEach(allPhotos.indices, id: \.self) { index in
-                        let asset = allPhotos[index]
-                        let isSelected = selectedIDs.contains(asset.localIdentifier)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: thumbnailSize), spacing: 6)
+                    ], spacing: 6) {
+                        ForEach(allPhotos, id: \.localIdentifier) { asset in
+                            let isSelected = selectedIDs.contains(asset.localIdentifier)
 
-                        ThumbnailView(
-                            asset: asset,
-                            isSelected: isSelected,
-                            size: thumbnailSize,
-                            onTap: {
-                                onToggleSelection(asset)
-                            },
-                            qrCodeResult: qrCodeResults[asset.localIdentifier],
-                            onEdit: isSelected ? {
-                                onEditSelectedPhoto(asset)
-                            } : nil
-                        )
+                            ThumbnailView(
+                                asset: asset,
+                                isSelected: isSelected,
+                                size: thumbnailSize,
+                                onTap: {
+                                    onToggleSelection(asset)
+                                },
+                                qrCodeResult: qrCodeResults[asset.localIdentifier],
+                                onEdit: isSelected ? {
+                                    onEditSelectedPhoto(asset)
+                                } : nil
+                            )
+                            .id(asset.localIdentifier)
+                        }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
+                .onAppear {
+                    scrollToTarget(using: proxy)
+                }
             }
+        }
+    }
+
+    /// Scrolls without animation so returning to the tab looks like the grid was
+    /// simply left in that position. Deferred to the next runloop pass because a
+    /// LazyVGrid has not built its rows yet at `onAppear`, and `scrollTo` cannot
+    /// reach a row that does not exist.
+    private func scrollToTarget(using proxy: ScrollViewProxy) {
+        guard let scrollTargetPhotoID else { return }
+
+        DispatchQueue.main.async {
+            proxy.scrollTo(scrollTargetPhotoID, anchor: .center)
         }
     }
 }

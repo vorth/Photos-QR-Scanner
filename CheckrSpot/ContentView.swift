@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var authStatus: PHAuthorizationStatus = .notDetermined
     @State private var allPhotos: [PHAsset] = []
     @State private var selectedIDs: Set<String> = []
+    @State private var lastSelectedID: String? = nil
     @State private var selectedPhotoInfos: [PhotoInfo] = []
     @State private var qrCodeResults: [String: String] = [:]
     @State private var thumbnailSize: Double = 100
@@ -129,6 +130,7 @@ struct ContentView: View {
                         selectedIDs: selectedIDs,
                         thumbnailSize: $thumbnailSize,
                         qrCodeResults: qrCodeResults,
+                        scrollTargetPhotoID: scrollTargetPhotoID,
                         onToggleSelection: toggleSelection,
                         onEditSelectedPhoto: beginEditingPhoto
                     )
@@ -158,6 +160,7 @@ struct ContentView: View {
                                 selectedIDs: selectedIDs,
                                 thumbnailSize: $thumbnailSize,
                                 qrCodeResults: qrCodeResults,
+                                scrollTargetPhotoID: scrollTargetPhotoID,
                                 onToggleSelection: toggleSelection,
                                 onEditSelectedPhoto: beginEditingPhoto
                             )
@@ -191,6 +194,19 @@ struct ContentView: View {
                 PhotosPermissionView(onRequestAccess: requestAccess)
             }
         }
+    }
+
+    /// The photo the grid should scroll to when it appears. Prefers the most
+    /// recently selected photo; if there isn't one still selected (fresh launch,
+    /// or it was deselected) falls back to the selected photo with the latest
+    /// timestamp. `allPhotos` is newest-first, so that's the first selected
+    /// asset in the array. Nil when nothing is selected, leaving the grid at the
+    /// top showing the newest photos.
+    private var scrollTargetPhotoID: String? {
+        if let lastSelectedID, selectedIDs.contains(lastSelectedID) {
+            return lastSelectedID
+        }
+        return allPhotos.first { selectedIDs.contains($0.localIdentifier) }?.localIdentifier
     }
 
     private func beginEditingPhoto(asset: PHAsset) {
@@ -239,6 +255,9 @@ struct ContentView: View {
         
         if selectedIDs.contains(id) {
             selectedIDs.remove(id)
+            if lastSelectedID == id {
+                lastSelectedID = nil
+            }
             selectedPhotoInfos.removeAll { $0.photoID == id }
             qrCodeResults.removeValue(forKey: id)
             photoNotes.removeValue(forKey: id)
@@ -246,6 +265,7 @@ struct ContentView: View {
             photoMultiplicities.removeValue(forKey: id)
         } else {
             selectedIDs.insert(id)
+            lastSelectedID = id
             let photoInfo = PhotoInfo(asset: asset)
             selectedPhotoInfos.append(photoInfo)
             selectedPhotoInfos.sort(using: sortOrder)
